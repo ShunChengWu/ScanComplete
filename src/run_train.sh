@@ -1,16 +1,16 @@
 #!/bin/bash
 
-GPU=0
-BATCH_SIZE=8
-BASE_DIR='./train'
+GPU=1
+BATCH_SIZE=2
+BASE_DIR='../train'
 # Fill in training data filepattern here.
-DATA='data/vox19_dim32/train*.tfrecords'      # data for 19cm level
+DATA='/home/sc/research/ScanComplete/vox19_dim32/train_*.tfrecords'      # data for 19cm level
 #DATA='data/vox5-9-19_dim32/train_*.tfrecords' # data for 9cm and 5cm levels
 NUMBER_OF_STEPS=100000
 
 # coarse level
 IS_BASE_LEVEL=1
-HIERARCHY_LEVEL=3
+HIERARCHY_LEVEL=1 #3
 STORED_BLOCK_DIM=32
 STORED_BLOCK_HEIGHT=16
 BLOCK_DIM=32
@@ -38,7 +38,7 @@ VERSION=003
 #TRAIN_SAMPLES=1
 #VERSION=001
 
-PREDICT_SEMANTICS=0  # set to 1 to predict semantics
+PREDICT_SEMANTICS=1  # set to 1 to predict semantics
 WEIGHT_SEM=0.5
 
 python train.py \

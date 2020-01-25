@@ -211,6 +211,7 @@ def _train():
 
   session_config = tf.ConfigProto(
       allow_soft_placement=True, log_device_placement=False)
+  session_config.gpu_options.allow_growth = True
   train_op = slim.learning.create_train_op(total_loss, optimizer)
 
   # Run training.
