@@ -6,13 +6,13 @@ import tensorflow as tf
 import constants
 import preprocessor
 
-#_RESOLUTIONS = ['5cm', '9cm', '19cm']
-_RESOLUTIONS = ['19cm']
+_RESOLUTIONS = ['5cm', '9cm', '19cm']
 _INPUT_FEATURE = 'input_sdf'
 _TARGET_FEATURE = 'target_df'
 _TARGET_SEM_FEATURE = 'target_sem'
-#_HEIGHT_JITTER = [5, 3, 0]
-_HEIGHT_JITTER = [0]
+_HEIGHT_JITTER = [5, 3, 0]
+# _HEIGHT_JITTER = [0]
+# _RESOLUTIONS = ['19cm']
 
 
 def ReadSceneBlocksLevel(data_filepattern,
