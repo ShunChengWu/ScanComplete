@@ -2,3 +2,6 @@
 train
 vox19_dim32
 train_SceneNetRGBD
+models
+vis
+train_SceneNetRGBD_3_level/

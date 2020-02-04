@@ -57,7 +57,7 @@ class Dataset():
         try:
             item = self.load_item(index)
         except:
-            print('loading error: ' + self.data[index][0])
+            print('loading error: ' + self.data[index][0], self.data[index][1])
             item = self.load_item(0)
 
         return item

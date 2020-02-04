@@ -4,9 +4,9 @@ GPU=1
 BATCH_SIZE=2
 BASE_DIR='../train'
 # Fill in training data filepattern here.
-DATA='/home/sc/research/ScanComplete/train_SceneNetRGBD/train_*.tfrecords'      # data for 19cm level
+DATA='/home/sc/research/ScanComplete/train_SceneNetRGBD_3_level/train_*.tfrecords'      # data for 19cm level
 #DATA='data/vox5-9-19_dim32/train_*.tfrecords' # data for 9cm and 5cm levels
-NUMBER_OF_STEPS=100000
+NUMBER_OF_STEPS=500000
 
 # coarse level
 IS_BASE_LEVEL=1
@@ -41,17 +41,35 @@ VERSION=003
 PREDICT_SEMANTICS=1  # set to 1 to predict semantics
 WEIGHT_SEM=0.5
 
-python train.py \
-  --gpu="${GPU}" \
-  --train_dir=${BASE_DIR}/train_v${VERSION} \
-  --batch_size="${BATCH_SIZE}" \
-  --data_filepattern="${DATA}" \
-  --stored_dim_block="${STORED_BLOCK_DIM}" \
-  --stored_height_block="${STORED_BLOCK_HEIGHT}" \
-  --dim_block="${BLOCK_DIM}" \
-  --height_block="${BLOCK_HEIGHT}" \
-  --hierarchy_level="${HIERARCHY_LEVEL}" \
-  --is_base_level="${IS_BASE_LEVEL}" \
-  --predict_semantics="${PREDICT_SEMANTICS}" \
-  --weight_semantic="${WEIGHT_SEM}" \
-  --number_of_steps="${NUMBER_OF_STEPS}"
+if (( ${TRAIN_SAMPLES} > 0 )) ; then
+	python train.py \
+	  --gpu="${GPU}" \
+	  --train_dir=${BASE_DIR}/train_v${VERSION} \
+	  --batch_size="${BATCH_SIZE}" \
+	  --data_filepattern="${DATA}" \
+	  --stored_dim_block="${STORED_BLOCK_DIM}" \
+	  --stored_height_block="${STORED_BLOCK_HEIGHT}" \
+	  --dim_block="${BLOCK_DIM}" \
+	  --height_block="${BLOCK_HEIGHT}" \
+	  --hierarchy_level="${HIERARCHY_LEVEL}" \
+	  --is_base_level="${IS_BASE_LEVEL}" \
+	  --predict_semantics="${PREDICT_SEMANTICS}" \
+	  --weight_semantic="${WEIGHT_SEM}" \
+	  --number_of_steps="${NUMBER_OF_STEPS}" \
+	  --train_samples=1
+else
+	python train.py \
+	  --gpu="${GPU}" \
+	  --train_dir=${BASE_DIR}/train_v${VERSION} \
+	  --batch_size="${BATCH_SIZE}" \
+	  --data_filepattern="${DATA}" \
+	  --stored_dim_block="${STORED_BLOCK_DIM}" \
+	  --stored_height_block="${STORED_BLOCK_HEIGHT}" \
+	  --dim_block="${BLOCK_DIM}" \
+	  --height_block="${BLOCK_HEIGHT}" \
+	  --hierarchy_level="${HIERARCHY_LEVEL}" \
+	  --is_base_level="${IS_BASE_LEVEL}" \
+	  --predict_semantics="${PREDICT_SEMANTICS}" \
+	  --weight_semantic="${WEIGHT_SEM}" \
+	  --number_of_steps="${NUMBER_OF_STEPS}"
+fi

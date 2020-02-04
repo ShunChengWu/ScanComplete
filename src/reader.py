@@ -82,9 +82,9 @@ def ReadSceneBlocksLevel(data_filepattern,
   key_input = _RESOLUTIONS[hierarchy_level - 1] + '_' + _INPUT_FEATURE
   key_target = _RESOLUTIONS[hierarchy_level - 1] + '_' + _TARGET_FEATURE
   key_target_sem = _RESOLUTIONS[hierarchy_level - 1] + '_' + _TARGET_SEM_FEATURE
-  #key_input = 'input_sdf'
-  #key_target = 'target_df'
-  #key_target_sem = 'target_sem'
+  # key_input = _INPUT_FEATURE
+  # key_target = _TARGET_FEATURE
+  # key_target_sem = _TARGET_SEM_FEATURE
 
   input_sdf_blocks = examples[key_input]
   input_sdf_blocks = preprocessor.extract_block(

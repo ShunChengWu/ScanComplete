@@ -30,7 +30,7 @@ flags.DEFINE_bool('is_base_level', True, 'If base level of hierarchy.')
 flags.DEFINE_integer('num_quant_levels', 256, 'Number of quantization bins.')
 flags.DEFINE_integer('num_total_hierarchy_levels', 1,
                      'Number of total hierarchy levels.')
-flags.DEFINE_integer('pad_test', 6, 'Scene padding.')
+flags.DEFINE_integer('pad_test', 0, 'Scene padding.')
 flags.DEFINE_integer('p_norm', 1, 'P-norm loss (0 to disable).')
 flags.DEFINE_bool('predict_semantics', False,
                   'Also predict semantic labels per-voxel.')
@@ -60,7 +60,7 @@ def read_input_bytes_feature(feature_map, key, shape):
   return tensor
 
 
-def read_inputs(filename, height, padding, num_quant_levels, p_norm,
+def read_inputs(filename, feature_map, height, padding, num_quant_levels, p_norm,
                 predict_semantics):
   """Reads inputs for scan completion.
 
@@ -81,10 +81,13 @@ def read_inputs(filename, height, padding, num_quant_levels, p_norm,
                                      np arrays (if any).
   """
   hierarchy_level = FLAGS.hierarchy_level
-  for record in tf.python_io.tf_record_iterator(filename):
-    example = tf.train.Example()
-    example.ParseFromString(record)
-    feature_map = example.features
+  # counter=0
+  # for record in tf.python_io.tf_record_iterator(filename):
+  #         counter += 1
+  #         example = tf.train.Example()
+  #         example.ParseFromString(record)
+  #         feature_map = example.features
+  # print('counter:',counter)
     
   key_input = _RESOLUTIONS[hierarchy_level - 1] + '_' + _INPUT_FEATURE
   key_target = _RESOLUTIONS[hierarchy_level - 1] + '_' + _TARGET_FEATURE
@@ -92,7 +95,7 @@ def read_inputs(filename, height, padding, num_quant_levels, p_norm,
   # key_input = _INPUT_FEATURE
   # key_target = _TARGET_FEATURE
   # key_target_sem = _TARGET_SEM_FEATURE
-  print('key_input', key_input)
+  # print('key_input', key_input)
     
   # Input scan as sdf.
   input_scan = read_input_float_feature(feature_map, key_input, shape=[16,16,16])
@@ -218,44 +221,6 @@ def export_prediction_to_example(filename, pred_geo, pred_sem):
     writer.write(example.SerializeToString())
 
 
-def export_prediction_to_mesh(outprefix, input_sdf, output_df, output_sem,
-                              target_df, target_sem):
-  """Saves predicted df/sem + input (+ target, if any) to mesh visualization."""
-  # Add back (below floor) padding for vis (creates the surface on the bottom).
-  (scene_dim_z, scene_dim_y, scene_dim_x) = input_sdf.shape
-  save_input_sdf = constants.TRUNCATION * np.ones(
-      [scene_dim_z, 2 * FLAGS.pad_test + scene_dim_y, scene_dim_x])
-  save_prediction = np.copy(save_input_sdf)
-  save_target = None if target_df is None else np.copy(save_input_sdf)
-  save_input_sdf[:, FLAGS.pad_test:FLAGS.pad_test + scene_dim_y, :] = input_sdf
-  save_prediction[:, FLAGS.pad_test:FLAGS.pad_test + scene_dim_y, :] = output_df
-  if target_df is not None:
-    save_target[:, FLAGS.pad_test:FLAGS.pad_test + scene_dim_y, :] = target_df
-    # For error visualization as colors on mesh.
-    save_errors = np.zeros(shape=save_prediction.shape)
-    save_errors[:, FLAGS.pad_test:FLAGS.pad_test + scene_dim_y, :] = np.abs(
-        output_df - target_df)
-  if FLAGS.predict_semantics:
-    save_pred_sem = np.zeros(shape=save_prediction.shape, dtype=np.uint8)
-    save_pred_sem[:, FLAGS.pad_test:
-                  FLAGS.pad_test + scene_dim_y, :] = output_sem
-    save_pred_sem[np.greater(save_prediction, 1)] = 0
-    if target_sem is not None:
-      save_target_sem = np.zeros(shape=save_prediction.shape, dtype=np.uint8)
-      save_target_sem[:, FLAGS.pad_test:
-                      FLAGS.pad_test + scene_dim_y, :] = target_sem
-
-  # Save as mesh.
-  util.save_iso_meshes(
-      [save_input_sdf, save_prediction, save_target],
-      [None, save_errors, save_errors], [None, save_pred_sem, save_target_sem],
-      [
-          outprefix + 'input.obj', outprefix + 'pred.obj',
-          outprefix + 'target.obj'
-      ],
-      isoval=1)
-
-
 def create_model(scene_dim_x, scene_dim_y, scene_dim_z):
   """Init model graph for scene."""
   input_placeholder = tf.placeholder(
@@ -297,110 +262,144 @@ def create_model(scene_dim_x, scene_dim_y, scene_dim_z):
   return (input_placeholder, target_placeholder, target_lo_placeholder,
           target_sem_placeholder, target_sem_lo_placeholder, logits)
 
-
-def main(_):
-  model_path = FLAGS.base_dir
-  output_folder = FLAGS.output_folder
-  if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-
-  # First load the data to figure out sizes of things.
-  (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
-   prediction_semantics_low_resolution) = read_inputs(
-       FLAGS.input_scene, FLAGS.height_input, FLAGS.pad_test,
-       FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics)
-  (scene_dim_z, scene_dim_y, scene_dim_x) = input_scan.shape[:3]
-  # Init model.
-  (input_placeholder, target_placeholder, target_lo_placeholder,
-   target_sem_placeholder, target_sem_lo_placeholder, logits) = create_model(
-       scene_dim_x, scene_dim_y, scene_dim_z)
-  logit_groups_geometry = logits['logits_geometry']
-  logit_groups_semantics = logits['logits_semantics']
-  feature_groups = logits['features']
-
-  predictions_geometry_list, predictions_semantics_list = predict_from_model(
-      logit_groups_geometry, logit_groups_semantics, FLAGS.temperature)
-
-  init_op = tf.group(tf.global_variables_initializer(),
+class Prediction():
+    def __init__(self,dims,model_path):
+        self.dims = dims
+        
+        (input_placeholder, target_placeholder, target_lo_placeholder,
+             target_sem_placeholder, target_sem_lo_placeholder, logits) = create_model(dims[0], dims[1], dims[2])
+        
+        logit_groups_geometry = logits['logits_geometry']
+        logit_groups_semantics = logits['logits_semantics']
+        feature_groups = logits['features']
+          
+        predictions_geometry_list, predictions_semantics_list = predict_from_model(
+        logit_groups_geometry, logit_groups_semantics, FLAGS.temperature)
+        
+        self.input_placeholder = input_placeholder
+        self.target_placeholder = target_placeholder
+        self.target_lo_placeholder = target_lo_placeholder
+        self.target_sem_placeholder = target_sem_placeholder
+        self.target_sem_lo_placeholder = target_sem_lo_placeholder
+        self.feature_groups = feature_groups
+        self.predictions_geometry_list = predictions_geometry_list
+        self.predictions_semantics_list =predictions_semantics_list
+        
+        init_op = tf.group(tf.global_variables_initializer(),
                      tf.local_variables_initializer())
-  # Run on the cpu - don't need to worry about scene sizes
-  # config = tf.ConfigProto()
-  config = tf.ConfigProto( device_count = {'GPU': 0} )
-  with tf.Session(config=config) as session:
-    session.run(init_op)
-    if FLAGS.model_checkpoint:
-      checkpoint_path = os.path.join(model_path, FLAGS.model_checkpoint)
-    else:
-      checkpoint_path = tf.train.latest_checkpoint(model_path)
-    assign_fn = tf.contrib.framework.assign_from_checkpoint_fn(
-        checkpoint_path, tf.contrib.framework.get_variables_to_restore())
-    assign_fn(session)
-    tf.logging.info('Checkpoint loaded.')
-    tf.logging.info('Predicting...')
-
-    # Make batch size 1 to input to model.
-    input_scan = input_scan[np.newaxis, :, :, :, :]
-    prediction_scan_low_resolution = prediction_scan_low_resolution[
-        np.newaxis, :, :, :, :]
-    prediction_semantics_low_resolution = prediction_semantics_low_resolution[
-        np.newaxis, :, :, :]
-    output_prediction_scan = np.ones(shape=input_scan.shape)
-    # Fill with truncation, known values.
-    output_prediction_scan[:, :, :, :, 0] *= constants.TRUNCATION
-    output_prediction_semantics = np.zeros(
-        shape=[1, scene_dim_z, scene_dim_y, scene_dim_x], dtype=np.uint8)
-
-    # First get features.
-    feed_dict = {
-        input_placeholder: input_scan,
-        target_lo_placeholder: prediction_scan_low_resolution,
-        target_placeholder: output_prediction_scan,
-        target_sem_lo_placeholder: prediction_semantics_low_resolution,
-        target_sem_placeholder: output_prediction_semantics
-    }
-    # Cache these features.
-    feature_groups_ = session.run(feature_groups, feed_dict)
-    for n in range(8):
-      tf.logging.info('Predicting group [%d/%d]', n + 1, 8)
-      # Predict
-      feed_dict[feature_groups[n]] = feature_groups_[n]
-      predictions = session.run(
-          {
-              'prediction_geometry': predictions_geometry_list[n],
-              'prediction_semantics': predictions_semantics_list[n]
-          },
-          feed_dict=feed_dict)
-      prediction_geometry = predictions['prediction_geometry']
-      prediction_semantics = predictions['prediction_semantics']
-      # Put into [-1,1] for next group.
-      if FLAGS.p_norm == 0:
-        prediction_geometry = prediction_geometry.astype(np.float32) / (
-            (FLAGS.num_quant_levels - 1) / 2.0) - 1.0
-
-      util.assign_voxel_group(output_prediction_scan, prediction_geometry,
-                              n + 1)
-      if FLAGS.predict_semantics:
-        util.assign_voxel_group(output_prediction_semantics,
-                                prediction_semantics, n + 1)
-
-    # Final outputs.
-    output_prediction_semantics = output_prediction_semantics[0]
-    # Make distances again.
-    input_scan, output_prediction_scan = create_dfs_from_output(
-        input_scan, output_prediction_scan, target_scan)
-
-    outprefix = os.path.join(
-        output_folder, 'level' + str(FLAGS.hierarchy_level) + '_' +
-        os.path.splitext(os.path.basename(FLAGS.input_scene))[0])
-    # Write prediction to file as TFRecord.
-    export_prediction_to_example(outprefix + 'pred.tfrecord',
-                                 output_prediction_scan,
-                                 output_prediction_semantics)
-    # Save mesh visualization output.
-    export_prediction_to_mesh(outprefix, input_scan, output_prediction_scan,
-                              output_prediction_semantics, target_scan,
-                              target_semantics)
-
+        # Run on the cpu - don't need to worry about scene sizes
+        config = tf.ConfigProto( device_count = {'GPU': 0} )
+        session = tf.Session(config=config)
+        session.run(init_op)
+        
+        if FLAGS.model_checkpoint:
+          checkpoint_path = os.path.join(model_path, FLAGS.model_checkpoint)
+        else:
+          checkpoint_path = tf.train.latest_checkpoint(model_path)
+          
+        assign_fn = tf.contrib.framework.assign_from_checkpoint_fn(
+            checkpoint_path, tf.contrib.framework.get_variables_to_restore())
+        assign_fn(session)
+        tf.logging.info('Checkpoint loaded.')
+        
+        self.session = session
+    def predict(self, input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
+                prediction_semantics_low_resolution):
+        feature_groups = self.feature_groups
+        input_placeholder = self.input_placeholder
+        target_lo_placeholder = self.target_lo_placeholder
+        target_placeholder = self.target_placeholder
+        target_sem_lo_placeholder = self.target_sem_lo_placeholder
+        target_sem_placeholder  = self.target_sem_placeholder
+        predictions_geometry_list=self.predictions_geometry_list
+        predictions_semantics_list=self.predictions_semantics_list
+        session = self.session
+        
+        tf.logging.info('Predicting...')
+        
+        # Make batch size 1 to input to model.
+        input_scan = input_scan[np.newaxis, :, :, :, :]
+        prediction_scan_low_resolution = prediction_scan_low_resolution[
+            np.newaxis, :, :, :, :]
+        prediction_semantics_low_resolution = prediction_semantics_low_resolution[
+            np.newaxis, :, :, :]
+        output_prediction_scan = np.ones(shape=input_scan.shape)
+        # Fill with truncation, known values.
+        output_prediction_scan[:, :, :, :, 0] *= constants.TRUNCATION
+        output_prediction_semantics = np.zeros(
+            shape=[1, self.dims[0], self.dims[1], self.dims[2]], dtype=np.uint8)
+    
+        # First get features.
+        feed_dict = {
+            input_placeholder: input_scan,
+            target_lo_placeholder: prediction_scan_low_resolution,
+            target_placeholder: output_prediction_scan,
+            target_sem_lo_placeholder: prediction_semantics_low_resolution,
+            target_sem_placeholder: output_prediction_semantics
+        }
+        # Cache these features.
+        feature_groups_ = session.run(feature_groups, feed_dict)
+        for n in range(8):
+          tf.logging.info('Predicting group [%d/%d]', n + 1, 8)
+          # Predict
+          feed_dict[feature_groups[n]] = feature_groups_[n]
+          predictions = session.run(
+              {
+                  'prediction_geometry': predictions_geometry_list[n],
+                  'prediction_semantics': predictions_semantics_list[n]
+              },
+              feed_dict=feed_dict)
+          prediction_geometry = predictions['prediction_geometry']
+          prediction_semantics = predictions['prediction_semantics']
+          # Put into [-1,1] for next group.
+          if FLAGS.p_norm == 0:
+            prediction_geometry = prediction_geometry.astype(np.float32) / (
+                (FLAGS.num_quant_levels - 1) / 2.0) - 1.0
+    
+          util.assign_voxel_group(output_prediction_scan, prediction_geometry,
+                                  n + 1)
+          if FLAGS.predict_semantics:
+            util.assign_voxel_group(output_prediction_semantics,
+                                    prediction_semantics, n + 1)
+    
+        # Final outputs.
+        output_prediction_semantics = output_prediction_semantics[0]
+        # Make distances again.
+        input_scan, output_prediction_scan = create_dfs_from_output(
+            input_scan, output_prediction_scan, target_scan)
+        
+        return output_prediction_scan,output_prediction_semantics
+        
+def main(_):
+    model_path = FLAGS.base_dir
+    output_folder = FLAGS.output_folder
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        
+    dims = 16
+    pred = Prediction([dims, dims, dims], model_path)
+        
+    # Read TFRecords
+    hierarchy_level = FLAGS.hierarchy_level
+    counter=0
+    for record in tf.python_io.tf_record_iterator(FLAGS.input_scene):
+        counter += 1
+        example = tf.train.Example()
+        example.ParseFromString(record)
+        feature_map = example.features
+        
+        # First load the data to figure out sizes of things.
+        (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
+         prediction_semantics_low_resolution) = read_inputs(
+             FLAGS.input_scene, feature_map, FLAGS.height_input, FLAGS.pad_test,
+             FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics)
+        (scene_dim_z, scene_dim_y, scene_dim_x) = input_scan.shape[:3]
+    
+        print('scene_dim_z, scene_dim_y, scene_dim_x',scene_dim_z, scene_dim_y, scene_dim_x)
+  
+        output_prediction_scan,output_prediction_semantics = pred.predict(input_scan, target_scan, target_semantics, prediction_scan_low_resolution, 
+                  prediction_semantics_low_resolution)
+        print(counter)
 
 if __name__ == '__main__':
   tf.app.run(main)
