@@ -125,7 +125,7 @@ if __name__ is '__main__':
    
     import re
     for input_file_name in input_folder_names:
-        number = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?",input_file_name)      
+        number = re.findall('\d+',input_file_name)       
         output_file_name = 'train_{}.tfrecords'.format(number[0])
         
         output_path = os.path.join(output_folder, output_file_name)
