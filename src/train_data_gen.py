@@ -14,7 +14,7 @@ _TARGET_FEATURE = 'target_df'
 _TARGET_SEM_FEATURE = 'target_sem'
 _DIMS = [64,32,16]
 # num_quant_levels = 256
-threads = 17
+threads = 3
 TRUNCATION = 3
 # p_norm = 1
 
@@ -27,11 +27,11 @@ flags.DEFINE_string('input_dir', '/media/sc/BackupDesk/TrainingData_TSDF/train_S
                     'Directory to input TFRecords.')
 flags.DEFINE_string('predict_dir', '/media/sc/BackupDesk/TrainingData_TSDF/train_SceneNetRGBD_3_level_pred',
                     'Directory to input TFRecords.')
-flags.DEFINE_string('output_dir', '/media/sc/BackupDesk/TrainingData_TSDF/train_SceneNetRGBD_3_level_pred_2', '')
-flags.DEFINE_string('model_path', '/home/sc/research/ScanComplete/train/train_v002', '')
+flags.DEFINE_string('output_dir', '/media/sc/BackupDesk/TrainingData_TSDF/train_SceneNetRGBD_3_level_pred', '')
+flags.DEFINE_string('model_path', '/home/sc/research/ScanComplete/train/train_v003', '')
 flags.DEFINE_string('model_checkpoint', '',
                     'Model checkpoint to use (empty for latest).')
-flags.DEFINE_integer('hierarchy_level', 2, 'Hierachy level (1: finest level).')
+flags.DEFINE_integer('hierarchy_level', 3, 'Hierachy level (1: finest level).')
 flags.DEFINE_integer('num_quant_levels', 256, 'Number of quantization bins.')
 flags.DEFINE_bool('is_base_level', False, 'If base level of hierarchy.')
 flags.DEFINE_integer('pad_test', 0, 'Scene padding.')
@@ -40,6 +40,7 @@ flags.DEFINE_bool('predict_semantics', True,
                   'Also predict semantic labels per-voxel.')
 flags.DEFINE_bool('debug', False, '')
 flags.DEFINE_float('temperature', 100.0, 'Softmax temperature for sampling.')
+
 
 # 1. Load two levels of tfrecords
 # 2. load pre-trained model
@@ -386,11 +387,8 @@ def Feature(sdf, gt, gt_df, hierarchy_level=1):
     feature = tf.train.Example(features=tf.train.Features(feature=get_dict(sdf,gt,gt_df,hierarchy_level-1)))
     return feature.SerializeToString()
     
-def process(path, path_out, path_pred=None):
+def process(pred, path, path_out, path_pred=None):
     counter=0
-    
-    pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
-                  FLAGS.model_path)
     
     with tf.io.TFRecordWriter(path_out) as writer:
         if FLAGS.is_base_level:
@@ -411,10 +409,10 @@ def process(path, path_out, path_pred=None):
                 key_samples_sem = 'sem_samples_' + _RESOLUTIONS[FLAGS.hierarchy_level-1] 
                 
                 # predict 
-                ## load data at previous level
+                ## load data at previous leve
                 (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
                   prediction_semantics_low_resolution) = read_inputs(
-                  FLAGS.hierarchy_level-1, FLAGS.input_dir, feature_map, _DIMS[FLAGS.hierarchy_level-1], 0,
+                  FLAGS.hierarchy_level-1, feature_map, _DIMS[FLAGS.hierarchy_level-1], 0,
                   FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=1,
                   shape=[ _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1]])
                 ## predict
@@ -486,41 +484,43 @@ def process(path, path_out, path_pred=None):
                         break
             print('counter:',counter)
     
+    
    
 if __name__ == '__main__':
-    input_folder_names = sorted(os.listdir(FLAGS.input_dir))
-    createFolder(FLAGS.output_dir)
+    pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
+                  FLAGS.model_path)
     
-    pool = mp.Pool(threads)
-    pool.daemon = True
-    results=[]
-    
-    for i in range(len(input_folder_names)):
-        number = re.findall('\d+',input_folder_names[i]) 
-        output_file_name = 'train_{}.tfrecords'.format(number[0])
-        
-        in_path = os.path.join(FLAGS.input_dir,input_folder_names[i])
-        out_path = os.path.join(FLAGS.output_dir, output_file_name)
-        in_path_pred = os.path.join(FLAGS.predict_dir, input_folder_names[i])
-        
+    if os.path.isfile(FLAGS.input_dir):
+        print('Single Process')
+        in_path = FLAGS.input_dir
+        out_path = FLAGS.output_dir
+        in_path_pred = FLAGS.predict_dir
         print('input:', in_path)
         print('in_path_pred:', in_path_pred)
         print('out_path:', out_path)
         
-    
-    
-        if FLAGS.debug:
-            process(in_path,out_path,in_path_pred)
-            break
-        else:
-            results.append(
-                pool.apply_async(process, 
-                                  (in_path,out_path,in_path_pred))
-                )
-    
-    pool.close()
-    pool.join()
-    results = [r.get() for r in results]
-    for r in results:
-          print(r)
+        process(pred, in_path,out_path,in_path_pred)
+    else:
+        print('Batch Process')
+        input_folder_names = sorted(os.listdir(FLAGS.input_dir))
+        createFolder(FLAGS.output_dir)
+        
+        for i in range(len(input_folder_names)):
+            number = re.findall('\d+',input_folder_names[i]) 
+            output_file_name = 'train_{}.tfrecords'.format(number[0])
+            
+            in_path = os.path.join(FLAGS.input_dir,input_folder_names[i])
+            out_path = os.path.join(FLAGS.output_dir, output_file_name)
+            in_path_pred = os.path.join(FLAGS.predict_dir, input_folder_names[i])
+            
+            print('input:', in_path)
+            print('in_path_pred:', in_path_pred)
+            print('out_path:', out_path)
+            
+            process(pred, in_path,out_path,in_path_pred)
+        
+            if FLAGS.debug:
+                break
+      
+        
         
