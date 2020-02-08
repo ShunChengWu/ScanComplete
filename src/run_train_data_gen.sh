@@ -7,6 +7,13 @@ HIERARCHY_LEVEL=3
 IS_BASE_LEVEL=1
 thread=9
 
+PREDICT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred'
+OUTPUT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred_2'
+MODEL_PATH='/home/sc/research/ScanComplete/train/train_v002'
+HIERARCHY_LEVEL=2
+IS_BASE_LEVEL=0
+thread=3
+
 macro_CheckAndCreate() {
  if [ $# -lt 1 ]
   then
@@ -29,7 +36,6 @@ do
   filename=$(basename -- "$path")
   extension="${filename##*.}"
   #filename="${filename%.*}"
-  sequenceName=$filename
 
   in_path=$INPUT_DIR'/'$filename
   out_path=$OUTPUT_DIR'/'$filename
@@ -39,7 +45,7 @@ do
   echo "in_path_pred: $in_path_pred"
 
   if (( ${IS_BASE_LEVEL} > 0 )) ; then
-echo "1"
+    echo "1"
     python $exe \
     --input_dir=$in_path \
     --predict_dir=$in_path_pred \
@@ -48,7 +54,7 @@ echo "1"
     --hierarchy_level=$HIERARCHY_LEVEL \
     --is_base_level &
   else
-echo "0"
+    echo "0"
     python $exe \
     --input_dir=$in_path \
     --predict_dir=$in_path_pred \

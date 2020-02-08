@@ -490,37 +490,37 @@ if __name__ == '__main__':
     pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
                   FLAGS.model_path)
     
-    if os.path.isfile(FLAGS.input_dir):
-        print('Single Process')
-        in_path = FLAGS.input_dir
-        out_path = FLAGS.output_dir
-        in_path_pred = FLAGS.predict_dir
-        print('input:', in_path)
-        print('in_path_pred:', in_path_pred)
-        print('out_path:', out_path)
+    # if os.path.isfile(FLAGS.input_dir):
+    print('Single Process')
+    in_path = FLAGS.input_dir
+    out_path = FLAGS.output_dir
+    in_path_pred = FLAGS.predict_dir
+    print('input:', in_path)
+    print('in_path_pred:', in_path_pred)
+    print('out_path:', out_path)
+    
+    process(pred, in_path,out_path,in_path_pred)
+    # else:
+    #     print('Batch Process')
+    #     input_folder_names = sorted(os.listdir(FLAGS.input_dir))
+    #     createFolder(FLAGS.output_dir)
         
-        process(pred, in_path,out_path,in_path_pred)
-    else:
-        print('Batch Process')
-        input_folder_names = sorted(os.listdir(FLAGS.input_dir))
-        createFolder(FLAGS.output_dir)
+    #     for i in range(len(input_folder_names)):
+    #         number = re.findall('\d+',input_folder_names[i]) 
+    #         output_file_name = 'train_{}.tfrecords'.format(number[0])
+            
+    #         in_path = os.path.join(FLAGS.input_dir,input_folder_names[i])
+    #         out_path = os.path.join(FLAGS.output_dir, output_file_name)
+    #         in_path_pred = os.path.join(FLAGS.predict_dir, input_folder_names[i])
+            
+    #         print('input:', in_path)
+    #         print('in_path_pred:', in_path_pred)
+    #         print('out_path:', out_path)
+            
+    #         process(pred, in_path,out_path,in_path_pred)
         
-        for i in range(len(input_folder_names)):
-            number = re.findall('\d+',input_folder_names[i]) 
-            output_file_name = 'train_{}.tfrecords'.format(number[0])
-            
-            in_path = os.path.join(FLAGS.input_dir,input_folder_names[i])
-            out_path = os.path.join(FLAGS.output_dir, output_file_name)
-            in_path_pred = os.path.join(FLAGS.predict_dir, input_folder_names[i])
-            
-            print('input:', in_path)
-            print('in_path_pred:', in_path_pred)
-            print('out_path:', out_path)
-            
-            process(pred, in_path,out_path,in_path_pred)
-        
-            if FLAGS.debug:
-                break
+    #         if FLAGS.debug:
+    #             break
       
         
         
