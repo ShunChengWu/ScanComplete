@@ -8,7 +8,7 @@ IS_BASE_LEVEL=1
 thread=9
 
 PREDICT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred'
-OUTPUT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred_2'
+OUTPUT_DIR='/media/sc/BackupDesk/train_SceneNetRGBD_3_level_pred_2'
 MODEL_PATH='/home/sc/research/ScanComplete/train/train_v002'
 HIERARCHY_LEVEL=2
 IS_BASE_LEVEL=0

@@ -30,7 +30,7 @@ TRAIN_SAMPLES=1
 VERSION=002
 
 ## hi level
-DATA='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred_2/train_*.tfrecords'
+DATA='/media/sc/BackupDesk/train_SceneNetRGBD_3_level_pred_2/train_*.tfrecords'
 IS_BASE_LEVEL=0
 HIERARCHY_LEVEL=1
 STORED_BLOCK_DIM=64

@@ -7,7 +7,12 @@ import tensorflow as tf
 import constants
 
 # Sdf/df preprocessing utility functions.
-
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print ('Error: Creating directory. ' +  directory)
 
 def quantize(tensor, num_quant_levels, truncation):
   """Quantizes df in tensor to [0,num_quant_levels-1]."""

@@ -4,9 +4,7 @@ import tensorflow as tf
 import constants
 import model
 import util
-import reader
-import re
-import multiprocessing as mp
+import  model_predict
 
 _RESOLUTIONS = ['5cm', '9cm', '19cm']
 _INPUT_FEATURE = 'input_sdf'
@@ -487,8 +485,12 @@ def process(pred, path, path_out, path_pred=None):
     
    
 if __name__ == '__main__':
-    pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
-                  FLAGS.model_path)
+    # pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
+    #               FLAGS.model_path)
+    
+    pred = model_predict([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]],
+                         FLAGS.model_path, FLAGS.temperature, FLAGS.model_checkpoint, constants.TRUNCATION,
+                 FLAGS.p_norm, FLAGS.num_quant_levels, FLAGS.predict_semantics, FLAGS.is_base_level)
     
     # if os.path.isfile(FLAGS.input_dir):
     print('Single Process')

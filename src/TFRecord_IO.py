@@ -18,6 +18,7 @@ threads = 17
 debug=False
 TRUNCATION = 3
 p_norm = 1
+for_eval = False
 
 # _DIMS = [64, 32, 16]
 input_folders = [
@@ -25,30 +26,15 @@ input_folders = [
     '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_094',
     '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_188'
     ]
-output_folder = '/home/sc/research/ScanComplete/train_SceneNetRGBD_3_level'
+output_folder = '/media/sc/SSD1TB/train_SceneNetRGBD_3_level'
 
-
-
-# DIM = 16
-# scale=18.8
-# level = 3
-# input_base_folder = '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_188'
-# output_folder = '/home/sc/research/ScanComplete/train_SceneNetRGBD_188'
-
-# DIM=32
-# scale=9.4
-# level=2
-# input_base_folder = '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_094'
-# output_folder = '/home/sc/research/ScanComplete/train_SceneNetRGBD_094'
-
-# DIM=64
-# scale=4.7
-# level=1
-# input_base_folder = '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_047'
-# output_folder = '/home/sc/research/ScanComplete/train_SceneNetRGBD_047'
-
-# stored_dim_block=64
-# stored_height_block=64                    
+for_eval = True
+input_folders = [
+    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_047',
+    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_094',
+    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_188'
+    ]
+output_folder = '/media/sc/SSD1TB/test_SceneNetRGBD_3_level'
 
 def createFolder(directory):
     try:
@@ -85,6 +71,9 @@ def get_dict(sdf,gt,gt_df, level):
         key_target: _float_feature(gt_df.ravel()),# tf.convert_to_tensor(gt),
         key_target_sem: _bytes_feature(gt.tobytes()), #tf.convert_to_tensor(gt),
     }
+    if for_eval:
+        serialization[key_input + "/dim"] = util.int64_feature(sdf.shape)
+    
     return serialization
 def Feature(sdf, gt, gt_df, hierarchy_level=1):
     feature = tf.train.Example(features=tf.train.Features(feature=get_dict(sdf,gt,gt_df,hierarchy_level-1)))
@@ -125,8 +114,11 @@ if __name__ is '__main__':
    
     import re
     for input_file_name in input_folder_names:
-        number = re.findall('\d+',input_file_name)       
-        output_file_name = 'train_{}.tfrecords'.format(number[0])
+        number = re.findall('\d+',input_file_name)
+        if len(number)  == 0:
+            output_file_name = 'eval.tfrecords'
+        else:
+            output_file_name = 'train_{}.tfrecords'.format(number[0])
         
         output_path = os.path.join(output_folder, output_file_name)
         print(input_file_name)
