@@ -6,6 +6,14 @@ NYU14_name_list = ['Unknown', 'Bed', 'Books', 'Ceiling', 'Chair',
                   'Sofa', 'Table', 'TV', 'Wall', 'Window'
                  ]
 
+def formatString(means,name):
+    def numpy_to_string(x):
+        string = ''
+        for n in x:
+            string += '%5.3f\t' % n
+        return string
+    return '{}{}'.format(numpy_to_string(means[name]), '%5.3f' % means[name].mean())
+
 class IoU_base():
     """
     Given two [n,class] tensors, calculating per class IoU and average IoU

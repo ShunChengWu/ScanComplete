@@ -32,7 +32,7 @@ def scene_model_id_pair(path, dataset_portion=[0]):
     num_models = len(scene_name_pair)
     portioned_scene_name_pair = scene_name_pair[int(num_models *
                                                     dataset_portion[0]):]
-
+    portioned_scene_name_pair = sorted(portioned_scene_name_pair)
     return portioned_scene_name_pair
 
 def checkEnd(x):
@@ -43,11 +43,9 @@ def checkStart(x):
 
 class Dataset():
     def __init__(self, volume_path, gt_path, mask_path=None):
-        
         self.input_base_folder = checkEnd(os.path.abspath(volume_path))
         self.gt_base_folder = checkEnd(os.path.abspath(gt_path))
         self.mask_base_folder = checkEnd(os.path.abspath(mask_path)) if mask_path is not None else None
-        
         self.data = scene_model_id_pair(self.input_base_folder)
         
     def __len__(self):

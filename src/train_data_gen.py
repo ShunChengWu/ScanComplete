@@ -407,14 +407,14 @@ def process(pred, path, path_out, path_pred=None):
                 key_samples_sem = 'sem_samples_' + _RESOLUTIONS[FLAGS.hierarchy_level-1] 
                 
                 # predict 
-                ## load data at previous leve
+                ## load data at previous level
                 (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
                   prediction_semantics_low_resolution) = read_inputs(
                   FLAGS.hierarchy_level-1, feature_map, _DIMS[FLAGS.hierarchy_level-1], 0,
                   FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=1,
                   shape=[ _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1]])
                 ## predict
-                output_prediction_scan,output_prediction_semantics = \
+                output_prediction_scan,output_prediction_semantics,_= \
                     pred.predict(input_scan, target_scan, target_semantics, prediction_scan_low_resolution, 
                       prediction_semantics_low_resolution)
                     
@@ -464,7 +464,7 @@ def process(pred, path, path_out, path_pred=None):
                     shape=[ _DIMS[FLAGS.hierarchy_level], _DIMS[FLAGS.hierarchy_level], _DIMS[FLAGS.hierarchy_level]])
                       
                       ## predict
-                output_prediction_scan,output_prediction_semantics = \
+                output_prediction_scan,output_prediction_semantics,_= \
                     pred.predict(input_scan, target_scan, target_semantics, prediction_scan_low_resolution, 
                       prediction_semantics_low_resolution)
                     
@@ -488,7 +488,7 @@ if __name__ == '__main__':
     # pred = Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]], 
     #               FLAGS.model_path)
     
-    pred = model_predict([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]],
+    pred = model_predict.Prediction([ _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1],  _DIMS[FLAGS.hierarchy_level-1]],
                          FLAGS.model_path, FLAGS.temperature, FLAGS.model_checkpoint, constants.TRUNCATION,
                  FLAGS.p_norm, FLAGS.num_quant_levels, FLAGS.predict_semantics, FLAGS.is_base_level)
     

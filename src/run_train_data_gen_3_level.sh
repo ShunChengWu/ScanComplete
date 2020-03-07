@@ -1,18 +1,44 @@
+#!/bin/bash
+#trap "exit" INT TERM ERR
+trap "kill 0" EXIT
+
+#echo $# 
+if [ $# -lt 3 ]; then
+    echo "Must give three inputs: input_dir model_path level is_base_level"
+    exit
+fi
+
 exe='/home/sc/research/ScanComplete/src/train_data_gen.py'
-INPUT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level'
-PREDICT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred'
-OUTPUT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred'
-MODEL_PATH='/home/sc/research/ScanComplete/train/train_v003'
+
+INPUT_DIR=$1
+MODEL_PATH=$2
+HIERARCHY_LEVEL=$3
+IS_BASE_LEVEL=$(($4))
+PREDICT_DIR=$INPUT_DIR"_pred_"$(($HIERARCHY_LEVEL+1))
+OUTPUT_DIR=$INPUT_DIR"_pred_"$HIERARCHY_LEVEL
+thread=4
+
+
+## level 3 ##
+if false;then
+INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
+PREDICT_DIR=$INPUT_DIR"_pred"
+OUTPUT_DIR=$PREDICT_DIR
+MODEL_PATH='/home/sc/research/ScanComplete/train_0220/train_v003'
 HIERARCHY_LEVEL=3
 IS_BASE_LEVEL=1
-thread=9
+thread=8
+fi
 
-PREDICT_DIR='/media/sc/SSD1TB/train_SceneNetRGBD_3_level_pred'
-OUTPUT_DIR='/media/sc/BackupDesk/train_SceneNetRGBD_3_level_pred_2'
-MODEL_PATH='/home/sc/research/ScanComplete/train/train_v002'
+## level 2 ##
+if false;then
+INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
+OUTPUT_DIR=$PREDICT_DIR'_2'
+MODEL_PATH='/home/sc/research/ScanComplete/train_0220/train_v002'
 HIERARCHY_LEVEL=2
 IS_BASE_LEVEL=0
-thread=3
+thread=4
+fi
 
 macro_CheckAndCreate() {
  if [ $# -lt 1 ]
@@ -26,7 +52,6 @@ macro_CheckAndCreate() {
    mkdir -p $1
  fi
 }
-
 
 macro_CheckAndCreate $OUTPUT_DIR
 count=1

@@ -75,7 +75,7 @@ class Prediction():
         # Fill with truncation, known values.
         output_prediction_scan[:, :, :, :, 0] *= self.TRUNCATION
         output_prediction_semantics = np.zeros(
-            shape=[1, self.dims[0], self.dims[1], self.dims[2]], dtype=np.uint8)
+            shape=[1, self.dims[2], self.dims[1], self.dims[0]], dtype=np.uint8)
     
         # First get features.
         feed_dict = {
@@ -116,7 +116,7 @@ class Prediction():
         input_scan, output_prediction_scan = self.create_dfs_from_output(
             input_scan, output_prediction_scan, target_scan)
         
-        return output_prediction_scan,output_prediction_semantics   
+        return output_prediction_scan,output_prediction_semantics, input_scan
 
     def create_dfs_from_output(self, input_sdf, output_df, target_scan):
       """Rescales model output to distance fields (in voxel units)."""

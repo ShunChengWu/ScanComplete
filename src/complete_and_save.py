@@ -20,18 +20,18 @@ TRUNCATION = 3
 flags = tf.flags
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('input_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220/eval.tfrecords',
+flags.DEFINE_string('input_dir', '/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level/eval.tfrecords',
                     'Directory to input TFRecords.')
-flags.DEFINE_string('predict_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_2.tfrecords',
+flags.DEFINE_string('predict_dir', '/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level_pred/pred_level_3.tfrecords',
                     'Directory to input TFRecords.')
-flags.DEFINE_string('output_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_1.tfrecords', '')
-flags.DEFINE_string('output_eva', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_1','')
-flags.DEFINE_string('model_path', '/home/sc/research/ScanComplete/train_0220/train_v001', '')
+flags.DEFINE_string('output_dir', '/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level_pred/pred_level_3.tfrecords', '')
+flags.DEFINE_string('output_eva', '/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level_pred','')
+flags.DEFINE_string('model_path', '/home/sc/research/ScanComplete/train/train_v003', '')
 flags.DEFINE_string('model_checkpoint', '',
                     'Model checkpoint to use (empty for latest).')
-flags.DEFINE_integer('height_input', 64, 'Input block y dim.')
+flags.DEFINE_integer('height_input', 16, 'Input block y dim.')
 flags.DEFINE_integer('class_num', 14, '')
-flags.DEFINE_integer('hierarchy_level', 1, 'Hierachy level (1: finest level).')
+flags.DEFINE_integer('hierarchy_level', 3, 'Hierachy level (1: finest level).')
 flags.DEFINE_integer('num_quant_levels', 256, 'Number of quantization bins.')
 flags.DEFINE_bool('is_base_level', False, 'If base level of hierarchy.')
 flags.DEFINE_integer('pad_test', 0, 'Scene padding.')
@@ -41,11 +41,9 @@ flags.DEFINE_bool('predict_semantics', True,
 flags.DEFINE_float('temperature', 100.0, 'Softmax temperature for sampling.')
 flags.DEFINE_integer('debug', 0, '')
 flags.DEFINE_integer('mesh',0,'output mesh.')
-flags.DEFINE_integer('save_npy',1,'save numpy array.')
 flags.DEFINE_integer('write_output',0,'write output to TFRecords.')
 flags.DEFINE_integer('target_num', -1,'')
 flags.DEFINE_integer('start_from', -1,'')
-flags.DEFINE_integer('max_num', -1,'')
 
 def numpy_to_string(x):
         string = ''
@@ -142,8 +140,6 @@ def export_prediction_to_example(filename, pred_geo, pred_sem):
           pred_sem.flatten().tobytes())
     example = tf.train.Example(features=tf.train.Features(feature=out_feature))
     writer.write(example.SerializeToString())
-    
-
 
 def read_inputs(hierarchy_level, feature_map, prev_feature_map, height, padding, num_quant_levels, p_norm,
                 predict_semantics, processing):
@@ -380,13 +376,12 @@ def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,wr
         print('Acc:\t{}'.format(metrics_ssc.formatString(means,'acc')))
         print('Recall:\t{}'.format(metrics_ssc.formatString(means,'recall')))
         if FLAGS.target_num <0:
-            if FLAGS.write_output:
-                with open(os.path.join(FLAGS.output_eva, 'IoU.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(iou)))
-                with open(os.path.join(FLAGS.output_eva, 'Acc.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(acc)))
-                with open(os.path.join(FLAGS.output_eva, 'Recall.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(recall)))
+            with open(os.path.join(FLAGS.output_eva, 'IoU.txt'), 'a+') as f:
+                f.write('{}\t{}\n'.format(counter-1,formatString(iou)))
+            with open(os.path.join(FLAGS.output_eva, 'Acc.txt'), 'a+') as f:
+                f.write('{}\t{}\n'.format(counter-1,formatString(acc)))
+            with open(os.path.join(FLAGS.output_eva, 'Recall.txt'), 'a+') as f:
+                f.write('{}\t{}\n'.format(counter-1,formatString(recall)))
         
         
     feature = tf.train.Example(features=tf.train.Features(feature=serialization))
@@ -397,15 +392,9 @@ def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,wr
         outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_') 
         export_prediction_to_mesh(outprefix, input_scan_modified, output_prediction_scan,
                   output_prediction_semantics, target_scan,
-                  target_semantics, saveMesh=False)        
-    if FLAGS.save_npy > 0:        
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_pd.npy') 
-        np.save(outprefix, output_prediction_semantics)
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_gt.npy') 
-        np.save(outprefix, target_semantics)
-        
-        
-        
+                  target_semantics, saveMesh=False) 
+    
+              
 
 def process(path, path_out, path_pred=None):
     counter=0
@@ -463,9 +452,6 @@ def process(path, path_out, path_pred=None):
                     print('counter: ', counter)
                     if counter >= 0:
                         break
-                if FLAGS.max_num > 0:
-                    if counter >= FLAGS.max_num:
-                        break
         else:
             for record, record_pred in zip(tf.python_io.tf_record_iterator(path),\
                                            tf.python_io.tf_record_iterator(path_pred)):
@@ -483,9 +469,6 @@ def process(path, path_out, path_pred=None):
                 if FLAGS.debug > 0:
                     print('counter: ', counter)
                     if counter > 10:
-                        break
-                if FLAGS.max_num > 0:
-                    if counter >= FLAGS.max_num:
                         break
     if FLAGS.target_num>=0:
         return ious,accs,recalls

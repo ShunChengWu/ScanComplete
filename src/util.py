@@ -79,36 +79,78 @@ def preprocess_target_sem(sem):
 def make_label_color(label):
   """Provides default colors for semantics labels."""
   assert label >= 0 and label < constants.NUM_CLASSES
+  # return {
+  #     0: [0.0, 0.0, 0.0],  # empty
+  #     1: [240, 196, 135],  # bed
+  #     2: [255, 160, 160],  # ceiling
+  #     3: [214, 215, 111],  # chair
+  #     4: [105, 170, 66],  # floor
+  #     5: [229, 139, 43],  # furniture
+  #     6: [201, 187, 223],  # objects
+  #     7: [147, 113, 197],  # sofa
+  #     8: [82, 131, 190],  # desk
+  #     9: [172, 220, 31],  # tv
+  #     10: [188, 228, 240],  # wall
+  #     11: [140, 168, 215],  # window
+  #     12: [128, 128, 128]  # unannotated
+  # }[int(label)]
   return {
-      0: [0.0, 0.0, 0.0],  # empty
-      1: [240, 196, 135],  # bed
-      2: [255, 160, 160],  # ceiling
-      3: [214, 215, 111],  # chair
-      4: [105, 170, 66],  # floor
-      5: [229, 139, 43],  # furniture
-      6: [201, 187, 223],  # objects
-      7: [147, 113, 197],  # sofa
-      8: [82, 131, 190],  # desk
-      9: [172, 220, 31],  # tv
-      10: [188, 228, 240],  # wall
-      11: [140, 168, 215],  # window
-      12: [128, 128, 128]  # unannotated
-  }[int(label)]
+      0: [  255,   255,   255],
+       1:[  0,   0, 255],
+       2:[232,  88,  47],
+       3:[  0, 217,   0],
+       4:[148,   0, 240],
+       5:[222, 241,  23],
+       6:[255, 205, 205],
+       7:[  0, 223, 228],
+       8:[106, 135, 204],
+       9:[116,  28,  41],
+       10:[240,  35, 235],
+       11:[  0, 166, 156],
+       12:[249, 139,   0],
+       13:[225, 228, 194]
+      }[int(label)]
 
 
 def export_labeled_scene(pred_df, pred_sem, output_path, df_thresh=1):
   """Saves colored point cloud for semantics."""
-  with open(output_path + '.obj', 'w') as output_file:
+  # with open(output_path + '.obj', 'w') as output_file:
+  #   for z in range(0, pred_df.shape[0]):
+  #     for y in range(0, pred_df.shape[1]):
+  #       for x in range(0, pred_df.shape[2]):
+  #         if pred_df[z, y, x] > df_thresh:
+  #           continue
+  #         label = pred_sem[z, y, x]
+  #         c = [ci / 255.0 for ci in make_label_color(label)]
+  #         line = 'v %f %f %f %f %f %f\n' % (y, z, x, c[0], c[1], c[2])
+  #         output_file.write(line)
+  with open(output_path + '.ply', 'w') as f:
+    total_points = 0
+    for z in range(0, pred_df.shape[0]):
+      for y in range(0, pred_df.shape[1]):
+        for x in range(0, pred_df.shape[2]):
+          if pred_df[z, y, x] > df_thresh:
+            continue
+          total_points += 1
+    f.write('ply\n')
+    f.write('format ascii 1.0\n')
+    f.write('element vertex {}\n'.format(total_points))
+    f.write('property float x\n')
+    f.write('property float y\n')
+    f.write('property float z\n')
+    f.write('property uchar red\n')
+    f.write('property uchar green\n')
+    f.write('property uchar blue\n')
+    f.write('end_header\n')
     for z in range(0, pred_df.shape[0]):
       for y in range(0, pred_df.shape[1]):
         for x in range(0, pred_df.shape[2]):
           if pred_df[z, y, x] > df_thresh:
             continue
           label = pred_sem[z, y, x]
-          c = [ci / 255.0 for ci in make_label_color(label)]
-          line = 'v %f %f %f %f %f %f\n' % (y, z, x, c[0], c[1], c[2])
-          output_file.write(line)
-
+          c = make_label_color(label)
+          line = '%f %f %f %d %d %d\n' % (y, z, x, c[0], c[1], c[2])
+          f.write(line)
 
 def save_mat_df(df, error, filename):
   """Saves df as matlab .mat file."""
@@ -118,7 +160,7 @@ def save_mat_df(df, error, filename):
   sio.savemat(filename, output)
 
 
-def save_iso_meshes(dfs, errs, semantics, filenames, isoval=1):
+def save_iso_meshes(dfs, errs, semantics, filenames, isoval=1, semantic_only=False):
   """Saves dfs to obj files (by calling matlab's 'isosurface' function)."""
   assert len(dfs) == len(filenames) and (
       errs is None or len(dfs) == len(errs)) and (semantics is None or
@@ -129,6 +171,8 @@ def save_iso_meshes(dfs, errs, semantics, filenames, isoval=1):
       if semantics[i] is not None:
         export_labeled_scene(dfs[i], semantics[i],
                              os.path.splitext(filenames[i])[0] + '_sem')
+  if semantic_only:
+      return
 
   mat_filenames = [os.path.splitext(x)[0] + '.mat' for x in filenames]
   # Save .mat files for matlab call.

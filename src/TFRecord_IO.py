@@ -18,23 +18,51 @@ threads = 17
 debug=False
 TRUNCATION = 3
 p_norm = 1
-for_eval = False
 
-# _DIMS = [64, 32, 16]
-input_folders = [
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_047',
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_094',
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_train_188'
-    ]
-output_folder = '/media/sc/SSD1TB/train_SceneNetRGBD_3_level'
+baseFolder='/media/sc/BackupDesk/TrainingData_TSDF_0220/'
+# for training
+if 1:
+    for_eval = False
+    input_folders = [
+        baseFolder + 'SceneNet_train_047',
+        baseFolder + 'SceneNet_train_094',
+        baseFolder + 'SceneNet_train_188',
+        ]
+    output_folder = baseFolder + 'train_SceneNetRGBD_3_level_0220'
 
-for_eval = True
-input_folders = [
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_047',
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_094',
-    '/media/sc/BackupDesk/TrainingData_TSDF/SceneNet_test_188'
-    ]
-output_folder = '/media/sc/SSD1TB/test_SceneNetRGBD_3_level'
+if 1:# for evaluation
+    for_eval = True
+    input_folders = [
+        baseFolder + 'SceneNet_test_047',
+        baseFolder + 'SceneNet_test_094',
+        baseFolder + 'SceneNet_test_188',
+        ]
+    output_folder = baseFolder + 'test_SceneNetRGBD_3_level_0220'
+
+
+
+if 0:# for evaluation (whole scene)
+    for_eval = True
+    baseFolder = '/media/sc/SSD1TB/Evaluation_ScanComplete/'
+    input_folders = [
+        baseFolder + '047',
+        baseFolder + '094',
+        baseFolder + '188',
+        ]
+    output_folder = baseFolder + 'SceneNetRGBD_3_level'
+
+if 1:# test
+    for_eval = True
+    baseFolder = '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/'
+    input_folders = [
+        baseFolder + '047',
+        baseFolder + '094',
+        baseFolder + '188',
+        ]
+    output_folder = baseFolder + 'SceneNetRGBD_3_level'
+
+# debug=True
+
 
 def createFolder(directory):
     try:
@@ -73,6 +101,9 @@ def get_dict(sdf,gt,gt_df, level):
     }
     if for_eval:
         serialization[key_input + "/dim"] = util.int64_feature(sdf.shape)
+        
+        if debug:
+            print('\nshape: ', sdf.shape, '\n')
     
     return serialization
 def Feature(sdf, gt, gt_df, hierarchy_level=1):
@@ -102,10 +133,10 @@ def LoadSequencePairToTFRecord(input_file_name, record_file):
             
             feature = tf.train.Example(features=tf.train.Features(feature=serialization))
             writer.write(feature.SerializeToString())
-            if debug and i > 50:
+            if debug and i >= 1:
                 break
             
-if __name__ is '__main__':
+if __name__ == '__main__':
     input_folder_names = sorted(os.listdir(os.path.join(input_folders[0], 'train')))
     createFolder(output_folder)
     pool = mp.Pool(threads)

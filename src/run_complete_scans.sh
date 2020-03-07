@@ -14,9 +14,9 @@ TEST_SCENES_PATH_1='/home/sc/research/ScanComplete/train_SceneNetRGBD_047'
 
 # Fill in model to use here
 PREDICT_SEMANTICS=1
-HIERARCHY_LEVEL_3_MODEL='/home/sc/research/ScanComplete/train/train_v003'
-HIERARCHY_LEVEL_2_MODEL='/home/sc/research/ScanComplete/train/train_v002'
-HIERARCHY_LEVEL_1_MODEL='/home/sc/research/ScanComplete/train/train_v001'
+HIERARCHY_LEVEL_3_MODEL='/home/sc/research/ScanComplete/train_0220/train_v003'
+HIERARCHY_LEVEL_2_MODEL='/home/sc/research/ScanComplete/train_0220/train_v002'
+HIERARCHY_LEVEL_1_MODEL='/home/sc/research/ScanComplete/train_0220/train_v001'
 
 # Specify output folders for each hierarchy level.
 OUTPUT_FOLDER_3=${BASE_OUTPUT_DIR}/vis_level3
