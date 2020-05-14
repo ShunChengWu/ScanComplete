@@ -3,12 +3,7 @@
 GPU=1
 BATCH_SIZE=2
 BASE_DIR='../train_1_level'
-# Fill in training data filepattern here.
-DATA='/media/sc/SSD1TB/train_SceneNetRGBD_3_level/train_*.tfrecords'
-
-BASE_DIR='../train_0324_1_level'
-DATA='/media/sc/BackupDesk/TrainingData_TSDF_0311/SceneNetRGBD_3_level_train/train_*.tfrecords'
-
+DATA='/media/sc/BackupDesk/TrainingData_TSDF_0311/SceneNetRGBD_1_level/train_*.tfrecords'
 NUMBER_OF_STEPS=500000
 
 # coarse level

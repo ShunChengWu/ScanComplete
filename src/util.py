@@ -171,8 +171,8 @@ def save_iso_meshes(dfs, errs, semantics, filenames, isoval=1, semantic_only=Fal
       if semantics[i] is not None:
         export_labeled_scene(dfs[i], semantics[i],
                              os.path.splitext(filenames[i])[0] + '_sem')
-  if semantic_only:
-      return
+  # if semantic_only:
+  #     return
 
   mat_filenames = [os.path.splitext(x)[0] + '.mat' for x in filenames]
   # Save .mat files for matlab call.

@@ -12,7 +12,6 @@ _TARGET_FEATURE = 'target_df'
 _TARGET_SEM_FEATURE = 'target_sem'
 _DIMS = [64,32,16]
 # num_quant_levels = 256
-threads = 3
 TRUNCATION = 3
 # p_norm = 1
 
@@ -390,6 +389,7 @@ def process(pred, path, path_out, path_pred=None):
     
     with tf.io.TFRecordWriter(path_out) as writer:
         if FLAGS.is_base_level:
+            print('[train_data_gen.py][process] not base level.')
             for record in tf.python_io.tf_record_iterator(path):
                 counter += 1
                 
@@ -432,6 +432,8 @@ def process(pred, path, path_out, path_pred=None):
                         break
             print('counter:',counter)
         else:
+            if FLAGS.debug is True:
+                print('[train_data_gen.py][process] not base level.')
             for record, record_pred in zip(tf.python_io.tf_record_iterator(path),\
                                            tf.python_io.tf_record_iterator(path_pred)):
                 counter += 1
@@ -443,6 +445,8 @@ def process(pred, path, path_out, path_pred=None):
                 feature_map_pred = example.features
                 
                 # get raw data from input file
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] serializa raw input data.')
                 serialization=dict()
                 serialization['data'] = _bytes_feature(tf.train.Example(features=feature_map).SerializeToString())
     
@@ -453,27 +457,39 @@ def process(pred, path, path_out, path_pred=None):
                 
                 # predict 
                 ## load data at previous level
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] read inputs.')
                 (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
                   prediction_semantics_low_resolution) = read_inputs(
                   FLAGS.hierarchy_level-1, feature_map, _DIMS[FLAGS.hierarchy_level-1], 0,
                   FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=1,
                   shape=[ _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1], _DIMS[FLAGS.hierarchy_level-1]])
                 
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] read low resolution inputs.')
                 prediction_scan_low_resolution,prediction_semantics_low_resolution = read_prediction(
                     FLAGS.hierarchy_level, feature_map_pred, FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics,
                     shape=[ _DIMS[FLAGS.hierarchy_level], _DIMS[FLAGS.hierarchy_level], _DIMS[FLAGS.hierarchy_level]])
                       
-                      ## predict
+                ## predict
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] prediction.')
                 output_prediction_scan,output_prediction_semantics,_= \
                     pred.predict(input_scan, target_scan, target_semantics, prediction_scan_low_resolution, 
                       prediction_semantics_low_resolution)
-                    
+                
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] serializa prediction.')
                 serialization[key_samples] = _float_feature(output_prediction_scan.ravel())
                 serialization[key_samples_sem] =_bytes_feature(output_prediction_semantics.tobytes())
-                        
+                
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] writing to example.')
                 feature = tf.train.Example(features=tf.train.Features(feature=serialization))
                 
                 
+                if FLAGS.debug is True:
+                    print('[train_data_gen.py][process] writing to file.')
                 writer.write(feature.SerializeToString())
                
                 if FLAGS.debug is True:

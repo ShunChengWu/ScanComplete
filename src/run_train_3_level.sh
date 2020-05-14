@@ -6,18 +6,19 @@ PREDICT_SEMANTICS=1  # set to 1 to predict semantics
 WEIGHT_SEM=0.5
 GPU=1
 BATCH_SIZE=2
-BASE_DIR='../train_0220'
 # Fill in training data filepattern here.
 PATTEN='train_*.tfrecords'
-INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
-DATA='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220/train_*.tfrecords'
-DATA_PRED_3='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_3/train_*.tfrecords'
-DATA_PRED_2='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_2/train_*.tfrecords'
+
+#BASE_DIR='../train_0220'
+#INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
+#DATA='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220/train_*.tfrecords'
+#DATA_PRED_3='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_3/train_*.tfrecords'
+#DATA_PRED_2='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_2/train_*.tfrecords'
 
 
-NUMBER_OF_STEPS=40000
-BASE_DIR='../train_test'
-INPUT_DIR='/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level'
+NUMBER_OF_STEPS=100000
+BASE_DIR='../train_0311'
+INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0311/SceneNetRGBD_3_level'
 DATA=$INPUT_DIR'/'$PATTEN
 DATA_PRED_3=$INPUT_DIR'_pred_3/'$PATTEN
 DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
@@ -49,7 +50,7 @@ python train.py \
 	  --predict_semantics="${PREDICT_SEMANTICS}" \
 	  --weight_semantic="${WEIGHT_SEM}" \
 	  --number_of_steps="${NUMBER_OF_STEPS}"
-. ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL
+. ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 4
 fi
 
 if false;then
@@ -79,7 +80,7 @@ python train.py \
 	  --weight_semantic="${WEIGHT_SEM}" \
 	  --number_of_steps="${NUMBER_OF_STEPS}" \
 	  --train_samples
-. ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL
+. ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 1
 fi
 
 if true;then

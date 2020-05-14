@@ -3,8 +3,8 @@
 trap "kill 0" EXIT
 
 #echo $# 
-if [ $# -lt 3 ]; then
-    echo "Must give three inputs: input_dir model_path level is_base_level"
+if [ $# -lt 4 ]; then
+    echo "Must give three inputs: input_dir model_path level is_base_level threadNum"
     exit
 fi
 
@@ -16,7 +16,7 @@ HIERARCHY_LEVEL=$3
 IS_BASE_LEVEL=$(($4))
 PREDICT_DIR=$INPUT_DIR"_pred_"$(($HIERARCHY_LEVEL+1))
 OUTPUT_DIR=$INPUT_DIR"_pred_"$HIERARCHY_LEVEL
-thread=4
+thread=$5
 
 
 ## level 3 ##

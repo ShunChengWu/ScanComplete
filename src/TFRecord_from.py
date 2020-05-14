@@ -20,20 +20,14 @@ TRUNCATION = 3
 flags = tf.flags
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('input_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220/eval.tfrecords',
+flags.DEFINE_string('input_dir', '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level_train/train_0.tfrecords',
                     'Directory to input TFRecords.')
-flags.DEFINE_string('predict_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_2.tfrecords',
-                    'Directory to input TFRecords.')
-flags.DEFINE_string('output_dir', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_1.tfrecords', '')
-flags.DEFINE_string('output_eva', '/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220_pred/eval_pred_1','')
-flags.DEFINE_string('model_path', '/home/sc/research/ScanComplete/train_0220/train_v001', '')
-flags.DEFINE_string('model_checkpoint', '',
-                    'Model checkpoint to use (empty for latest).')
+flags.DEFINE_string('output_eva', '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level_train/','')
 flags.DEFINE_integer('height_input', 64, 'Input block y dim.')
 flags.DEFINE_integer('class_num', 14, '')
 flags.DEFINE_integer('hierarchy_level', 1, 'Hierachy level (1: finest level).')
 flags.DEFINE_integer('num_quant_levels', 256, 'Number of quantization bins.')
-flags.DEFINE_bool('is_base_level', False, 'If base level of hierarchy.')
+flags.DEFINE_bool('is_base_level', True, 'If base level of hierarchy.')
 flags.DEFINE_integer('pad_test', 0, 'Scene padding.')
 flags.DEFINE_integer('p_norm', 1, 'P-norm loss (0 to disable).')
 flags.DEFINE_bool('predict_semantics', True,
@@ -314,7 +308,7 @@ def Feature(sdf, gt, gt_df, hierarchy_level=1):
     return feature.SerializeToString()
     
 
-def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,writer):
+def kernel(counter, feature_map):
     if FLAGS.target_num >=0:
         if counter-1 != FLAGS.target_num:
             return
@@ -322,11 +316,7 @@ def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,wr
         if counter-1 < FLAGS.start_from:
             return
     print('counter: ', counter)
-        
-    IoU = metrics_ssc.IoU(FLAGS.class_num)
-    RoC = metrics_ssc.PerClassAccRecall(FLAGS.class_num)
-    serialization=dict()
-    
+
     if FLAGS.hierarchy_level > len(_RESOLUTIONS):
         raise RuntimeError("out of range")
     
@@ -334,210 +324,38 @@ def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,wr
     ## load data at previous level
     (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
       prediction_semantics_low_resolution) = read_inputs(
-      FLAGS.hierarchy_level-1, feature_map, feature_map_pred, FLAGS.height_input, FLAGS.pad_test,
-      FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=1)
-         
-    # reset graph if input size changed
-    reset = False
-    if dims_pre is None:
-        reset = True
-    elif dims_pre != input_scan.shape:
-        reset = True
-    dims_pre = input_scan.shape                        
-    if reset is True:
-        tf.reset_default_graph()
-        (scene_dim_z, scene_dim_y, scene_dim_x) = input_scan.shape[:3]
-        pred = model_predict.Prediction([scene_dim_x, scene_dim_y, scene_dim_z],
-          FLAGS.model_path, FLAGS.temperature, FLAGS.model_checkpoint, constants.TRUNCATION,
-          FLAGS.p_norm, FLAGS.num_quant_levels, FLAGS.predict_semantics, FLAGS.is_base_level)
-        
-    ## predict
-    output_prediction_scan,output_prediction_semantics, input_scan_modified = \
-        pred.predict(input_scan, target_scan, target_semantics, prediction_scan_low_resolution, 
-          prediction_semantics_low_resolution)
-        
-    serialization[_PREDICT_DF+'/dim'] = util.int64_feature(output_prediction_scan.shape)
-    serialization[_PREDICT_DF] = util.float_feature(output_prediction_scan.flatten().tolist())
-    if FLAGS.predict_semantics:
-        serialization[_PREDICT_SEM] = util.bytes_feature(output_prediction_semantics.flatten().tobytes())
-        iou, inter, union = IoU(output_prediction_semantics,target_semantics)
-        acc, recall, inter2,gt_sum,pred_sum = RoC(output_prediction_semantics, target_semantics)
-        ious += iou
-        accs += acc
-        recalls += recall
-       
-        classes = "{:>5.5}\t".format('Metrics')
-        for name in metrics_ssc.NYU14_name_list:
-            classes += '{:>5.5}\t'.format(name)
-        classes += '{:>5.5}'.format('Mean')
-        print('')
-        print(classes)
-        means = dict()
-        means['iou'] = ious/counter
-        means['acc'] = accs/counter
-        means['recall'] = recalls/counter
-        print('IoU:\t{}'.format(metrics_ssc.formatString(means,'iou')))
-        print('Acc:\t{}'.format(metrics_ssc.formatString(means,'acc')))
-        print('Recall:\t{}'.format(metrics_ssc.formatString(means,'recall')))
-        if FLAGS.target_num <0:
-            if FLAGS.write_output:
-                with open(os.path.join(FLAGS.output_eva, 'IoU.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(iou)))
-                with open(os.path.join(FLAGS.output_eva, 'Acc.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(acc)))
-                with open(os.path.join(FLAGS.output_eva, 'Recall.txt'), 'a+') as f:
-                    f.write('{}\t{}\n'.format(counter-1,formatString(recall)))
-        
-        
-    feature = tf.train.Example(features=tf.train.Features(feature=serialization))
-    if writer is not None:
-        writer.write(feature.SerializeToString())
-
-    if FLAGS.mesh > 0:
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_') 
-        export_prediction_to_mesh(outprefix, input_scan_modified, output_prediction_scan,
-                  output_prediction_semantics, target_scan,
-                  target_semantics, saveMesh=False)        
+      FLAGS.hierarchy_level-1, feature_map, None, FLAGS.height_input, FLAGS.pad_test,
+      FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=0)
     if FLAGS.save_npy > 0:        
         outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_in.npy') 
         np.save(outprefix, input_scan)
-        
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_pd.npy') 
-        np.save(outprefix, output_prediction_semantics)
         outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_gt.npy') 
         np.save(outprefix, target_semantics)
-        
-        
-        
-
-def process(path, path_out, path_pred=None):
+         
+def process(path):
     counter=0
     
-    ious = np.zeros(FLAGS.class_num)
-    accs = np.zeros(FLAGS.class_num)
-    recalls = np.zeros(FLAGS.class_num)
-    dims_pre = None
-    if FLAGS.write_output >0:
-        with tf.io.TFRecordWriter(path_out) as writer:
-            if FLAGS.is_base_level:
-                for record in tf.python_io.tf_record_iterator(path):
-                    counter += 1
-                    example = tf.train.Example()
-                    example.ParseFromString(record)
-                    feature_map = example.features
-                    try:
-                        kernel(counter, feature_map, None, dims_pre,ious,accs,recalls,writer)
-                    except:
-                        print('error during processing sequence', counter)
-                    if FLAGS.debug > 0:
-                        if counter >= 0:
-                            break
-            else:
-                for record, record_pred in zip(tf.python_io.tf_record_iterator(path),\
-                                               tf.python_io.tf_record_iterator(path_pred)):
-                    counter += 1
-                    example = tf.train.Example()
-                    example.ParseFromString(record)
-                    feature_map = example.features
-                    example.ParseFromString(record_pred)
-                    feature_map_pred = example.features
-                    try:
-                        kernel(counter, feature_map, feature_map_pred, dims_pre,ious,accs,recalls,writer)
-                    except:
-                        print('error during processing sequence', counter)
-                    # kernel(counter, feature_map, feature_map_pred, dims_pre,ious,accs,recalls,writer)
-                    if FLAGS.debug > 0:
-                        print('counter: ', counter)
-                        if counter > 10:
-                            break
-    else:
-        if FLAGS.is_base_level:
-            for record in tf.python_io.tf_record_iterator(path):
-                counter += 1
-                example = tf.train.Example()
-                example.ParseFromString(record)
-                feature_map = example.features
-                # kernel(counter, feature_map, None, dims_pre,ious,accs,recalls,None)
-                try:
-                    kernel(counter, feature_map, None, dims_pre,ious,accs,recalls,None)
-                except:
-                    print('error during processing sequence', counter)
-                if FLAGS.debug > 0:
-                    print('counter: ', counter)
-                    if counter >= 0:
-                        break
-                if FLAGS.max_num > 0:
-                    if counter >= FLAGS.max_num:
-                        break
-        else:
-            for record, record_pred in zip(tf.python_io.tf_record_iterator(path),\
-                                           tf.python_io.tf_record_iterator(path_pred)):
-                counter += 1
-                example = tf.train.Example()
-                example.ParseFromString(record)
-                feature_map = example.features
-                example.ParseFromString(record_pred)
-                feature_map_pred = example.features
-                # kernel(counter, feature_map, feature_map_pred, dims_pre,ious,accs,recalls,None)
-                try:
-                    kernel(counter, feature_map, feature_map_pred, dims_pre,ious,accs,recalls,None)
-                except:
-                    print('error during processing sequence', counter)
-                if FLAGS.debug > 0:
-                    print('counter: ', counter)
-                    if counter > 10:
-                        break
-                if FLAGS.max_num > 0:
-                    if counter >= FLAGS.max_num:
-                        break
-    if FLAGS.target_num>=0:
-        return ious,accs,recalls
-    return ious/counter, accs/counter,recalls/counter    
+    for record in tf.python_io.tf_record_iterator(path):
+        counter += 1
+        example = tf.train.Example()
+        example.ParseFromString(record)
+        feature_map = example.features
+        # kernel(counter, feature_map, None, dims_pre,ious,accs,recalls,None)
+        try:
+            kernel(counter, feature_map)
+        except:
+            print('error during processing sequence', counter)
+        if FLAGS.debug > 0:
+            print('counter: ', counter)
+            if counter >= 0:
+                break
+        if FLAGS.max_num > 0:
+            if counter >= FLAGS.max_num:
+                break   
    
 if __name__ == '__main__':
-    # print('FLAGS.debug',FLAGS.debug)
-    # print('FLAGS.mesh',FLAGS.mesh)
-    # print('FLAGS.write_output',FLAGS.write_output)
-        
-    
     in_path = FLAGS.input_dir
-    out_path = FLAGS.output_dir
-    in_path_pred = FLAGS.predict_dir
     print('input:', in_path)
-    print('in_path_pred:', in_path_pred)
-    print('out_path:', out_path)
-    util.createFolder(os.path.dirname(out_path))
     util.createFolder(FLAGS.output_eva)
     
-    pth_iou = os.path.join(FLAGS.output_eva, 'IoU.txt') if not FLAGS.target_num>=0 else os.path.join(FLAGS.output_eva, str(FLAGS.target_num)+'_IoU.txt')
-    pth_acc = os.path.join(FLAGS.output_eva, 'Acc.txt') if not FLAGS.target_num>=0 else os.path.join(FLAGS.output_eva, str(FLAGS.target_num)+'_Acc.txt')
-    pth_recall = os.path.join(FLAGS.output_eva, 'Recall.txt') if not FLAGS.target_num>=0 else os.path.join(FLAGS.output_eva, str(FLAGS.target_num)+'_Recall.txt')
-        
-
-    # Create Files
-    classes = "{:>5.5}\t".format('Metrics')
-    for name in metrics_ssc.NYU14_name_list:
-        classes += '{:>5.5}\t'.format(name)
-    classes += '{:>5.5}'.format('Mean')    
-    if FLAGS.write_output:
-        with open(pth_iou, 'w+') as f:
-            f.write('{}\n'.format(classes))
-        with open(pth_acc, 'w+') as f:
-            f.write('{}\n'.format(classes))
-        with open(pth_recall, 'w+') as f:
-            f.write('{}\n'.format(classes))
-    
-    ious, accs, recalls = process(in_path,out_path,in_path_pred)
-
-    print('')
-    print(classes)
-    print('IoU:\t{}'.format(formatString( ious)))
-    print('Acc:\t{}'.format(formatString(accs)))
-    print('Recall:\t{}'.format(formatString(recalls)))
-    if FLAGS.write_output:
-        with open(pth_iou, 'a+') as f:
-            f.write('IoU:\t{}\n'.format(formatString(ious)))
-        with open(pth_acc, 'a+') as f:
-            f.write('Acc:\t{}\n'.format(formatString(accs)))
-        with open(pth_recall, 'a+') as f:
-            f.write('Rec:\t{}\n'.format(formatString(recalls)))
+    process(in_path)

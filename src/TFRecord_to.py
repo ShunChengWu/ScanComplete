@@ -15,69 +15,20 @@ _TARGET_FEATURE = 'target_df'
 _TARGET_SEM_FEATURE = 'target_sem'
 num_quant_levels = 256
 threads = 17
-debug=False
+debug=True
 TRUNCATION = 3
 p_norm = 1
 
 #baseFolder='/media/sc/BackupDesk/TrainingData_TSDF_0220/'
 
 # for training
-if 0:
+if 1:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
+    baseFolder = '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/'
     input_folders = [
-        baseFolder + '047/' + 'SceneNet_train/',
-        baseFolder + '094/' + 'SceneNet_train/',
-        baseFolder + '188/' + 'SceneNet_train/',
+        baseFolder + '047/',
         ]
     output_folder = baseFolder + 'SceneNetRGBD_3_level_train'
-if 1:
-    for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
-    input_folders = [
-        baseFolder + '047/' + 'SceneNet_train/',
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_1_level_train'
-
-#for testing
-if 0:
-    for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_TSDF_0311/'
-    input_folders = [
-        baseFolder + '047/' + 'SceneNet_test/',
-        baseFolder + '094/' + 'SceneNet_test/',
-        baseFolder + '188/' + 'SceneNet_test/',
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_3_level_test'
-if 1:
-    for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
-    input_folders = [
-        baseFolder + '047/' + 'SceneNet_test/',
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_1_level_test'
-
-if 0:# for evaluation
-    for_eval = True
-    input_folders = [
-        baseFolder + 'SceneNet_test_047',
-        baseFolder + 'SceneNet_test_094',
-        baseFolder + 'SceneNet_test_188',
-        ]
-    output_folder = baseFolder + 'test_SceneNetRGBD_3_level_0220'
-
-
-
-if 0:# for evaluation (whole scene)
-    for_eval = True
-    baseFolder = '/media/sc/SSD1TB/Evaluation_ScanComplete/'
-    input_folders = [
-        baseFolder + '047',
-        baseFolder + '094',
-        baseFolder + '188',
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_3_level'
-
 
 
 # debug=True
@@ -145,15 +96,14 @@ def LoadSequencePairToTFRecord(input_file_name, record_file):
                 gt = np.uint8(gt)
                 gt_df = gt_df.astype(float)
                 sdf = sdf * TRUNCATION # from [-1,1] to voxel distance
-                #gt_df = gt_df * TRUNCATION # originally it is 0 to 3. No needs to multiply again
                 serialized = get_dict(sdf,gt, gt_df, level)
                 for key, value in serialized.items():
                     serialization[key] = value
             
             feature = tf.train.Example(features=tf.train.Features(feature=serialization))
             writer.write(feature.SerializeToString())
-            if debug and i >= 1:
-                break
+            # if debug and i >= 1:
+            #     break
             
 if __name__ == '__main__':
     input_folder_names = sorted(os.listdir(os.path.join(input_folders[0], 'train')))

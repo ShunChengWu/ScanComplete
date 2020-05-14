@@ -4,22 +4,24 @@ trap "kill 0" EXIT
 
 exe='/home/sc/research/ScanComplete/src/eval.py'
 
-#INPUT_DIR='/media/sc/SSD1TB/test_SceneNetRGBD_3_level'
-#PREDICT_DIR='/media/sc/SSD1TB/test_SceneNetRGBD_3_level_pred'
-INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220'
-PREDICT_DIR=$INPUT_DIR"_pred"
-OUTPUT_DIR=$PREDICT_DIR
-
+# Test set
+#INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220'
 
 ### whole scene ###
-INPUT_DIR='/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level'
-PREDICT_DIR=$INPUT_DIR"_pred"
-OUTPUT_DIR=$PREDICT_DIR
+#INPUT_DIR='/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level'
 
-MODEL_PATH_3='/home/sc/research/ScanComplete/train_0220/train_v003'
-MODEL_PATH_2='/home/sc/research/ScanComplete/train_0220/train_v002'
-MODEL_PATH_1='/home/sc/research/ScanComplete/train_0220/train_v001'
-run_level_3=true
+#Test Test
+INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0311/SceneNetRGBD_3_level_test'
+
+MODEL_BASE='/home/sc/research/ScanComplete/train_test'
+MODEL_BASE='../train_0311'
+MODEL_PATH_3=$MODEL_BASE'/train_v003'
+MODEL_PATH_2=$MODEL_BASE'/train_v002'
+MODEL_PATH_1=$MODEL_BASE'/train_v001'
+
+PREDICT_DIR=$INPUT_DIR"_eval"
+OUTPUT_DIR=$PREDICT_DIR
+run_level_3=false
 run_level_2=true
 run_level_1=true
 height_level_3=16
@@ -51,6 +53,7 @@ macro_CheckAndCreate() {
 
 
 ########################### LEVEL 1 ############################# target sequence
+if false;then
 write_output=1
 mesh=1
 HIERARCHY_LEVEL=1
@@ -73,9 +76,9 @@ do
       extension="${filename##*.}"
       filename="${filename%.*}"
       in_path=$INPUT_DIR'/'$filename'.'$extension
-      out_path=$OUTPUT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL'.'$extension
-      in_path_pred=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL_PREV'.'$extension
-      eva_path=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL
+      out_path=$OUTPUT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL'.'$extension
+      in_path_pred=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL_PREV'.'$extension
+      eva_path=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL
       echo "in_path: $in_path"
       echo "out_path: $out_path"
       echo "in_path_pred: $in_path_pred"
@@ -104,8 +107,8 @@ do
     break
 fi
 done
+fi
 ################################################
-exit
 
 
 ########################### LEVEL 3 #############################
@@ -124,9 +127,9 @@ if $run_level_3; then
       extension="${filename##*.}"
       filename="${filename%.*}"
       in_path=$INPUT_DIR'/'$filename'.'$extension
-      out_path=$OUTPUT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL'.'$extension
-      in_path_pred=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL_PREV'.'$extension
-      eva_path=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL
+      out_path=$OUTPUT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL'.'$extension
+      in_path_pred=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL_PREV'.'$extension
+      eva_path=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL
       echo "in_path: $in_path"
       echo "out_path: $out_path"
       echo "in_path_pred: $in_path_pred"
@@ -171,9 +174,9 @@ if $run_level_2; then
       extension="${filename##*.}"
       filename="${filename%.*}"
       in_path=$INPUT_DIR'/'$filename'.'$extension
-      out_path=$OUTPUT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL'.'$extension
-      in_path_pred=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL_PREV'.'$extension
-      eva_path=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL
+      out_path=$OUTPUT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL'.'$extension
+      in_path_pred=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL_PREV'.'$extension
+      eva_path=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL
       echo "in_path: $in_path"
       echo "out_path: $out_path"
       echo "in_path_pred: $in_path_pred"
@@ -218,9 +221,9 @@ if $run_level_1; then
       extension="${filename##*.}"
       filename="${filename%.*}"
       in_path=$INPUT_DIR'/'$filename'.'$extension
-      out_path=$OUTPUT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL'.'$extension
-      in_path_pred=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL_PREV'.'$extension
-      eva_path=$PREDICT_DIR'/'$filename'_pred_'$HIERARCHY_LEVEL
+      out_path=$OUTPUT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL'.'$extension
+      in_path_pred=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL_PREV'.'$extension
+      eva_path=$PREDICT_DIR'/'$filename'_eval_'$HIERARCHY_LEVEL
       echo "in_path: $in_path"
       echo "out_path: $out_path"
       echo "in_path_pred: $in_path_pred"
