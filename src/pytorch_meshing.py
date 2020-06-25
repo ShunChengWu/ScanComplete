@@ -148,8 +148,8 @@ def occupancy_meshing(volume:torch.Tensor,
         print('meshing...done')
         
         print('colouring...')
-        color = mo.label2color(labels.cuda(), t1.cuda(), use_cuda = True)
-        # color = mo.label2color(labels.cpu(), t1.cpu(), use_cuda = False)
+        #color = mo.label2color(labels.cuda(), t1.cuda(), use_cuda = True)
+        color = mo.label2color(labels.cpu(), t1.cpu(), use_cuda = False)
         print('colouring...done')
         
         vertices = vertices.cpu()

@@ -1,3 +1,4 @@
+# Read numpy to TFRecord
 import tensorflow as tf
 import numpy as np
 

@@ -4,7 +4,7 @@ trap "kill 0" EXIT
 NUMBER_OF_STEPS=100000
 PREDICT_SEMANTICS=1  # set to 1 to predict semantics
 WEIGHT_SEM=0.5
-GPU=1
+GPU=0
 BATCH_SIZE=2
 # Fill in training data filepattern here.
 PATTEN='train_*.tfrecords'
@@ -17,8 +17,8 @@ PATTEN='train_*.tfrecords'
 
 
 NUMBER_OF_STEPS=100000
-BASE_DIR='../train_0624'
-INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0311/SceneNetRGBD_3_level'
+BASE_DIR='../train_0625_sample'
+INPUT_DIR='/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/ScanNet_3_level_train'
 DATA=$INPUT_DIR'/'$PATTEN
 DATA_PRED_3=$INPUT_DIR'_pred_3/'$PATTEN
 DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
@@ -27,7 +27,7 @@ DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
 
 
 # coarse level
-if true; then 
+if false; then 
 IS_BASE_LEVEL=1
 HIERARCHY_LEVEL=3
 STORED_BLOCK_DIM=16
@@ -50,10 +50,11 @@ python train.py \
 	  --predict_semantics="${PREDICT_SEMANTICS}" \
 	  --weight_semantic="${WEIGHT_SEM}" \
 	  --number_of_steps="${NUMBER_OF_STEPS}"
+echo "Generate training data for the next level."
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 4
 fi
 
-if false;then
+if true;then
 # mid level
 DATA=$DATA_PRED_3
 IS_BASE_LEVEL=0
@@ -83,7 +84,7 @@ python train.py \
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 1
 fi
 
-if false;then
+if true;then
 ## hi level
 DATA=$DATA_PRED_2
 IS_BASE_LEVEL=0

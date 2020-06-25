@@ -14,12 +14,15 @@ _INPUT_FEATURE = 'input_sdf'
 _TARGET_FEATURE = 'target_df'
 _TARGET_SEM_FEATURE = 'target_sem'
 num_quant_levels = 256
-threads = 17
+threads = 4
 debug=False
 TRUNCATION = 3
 p_norm = 1
+up_limit=50
 
 #baseFolder='/media/sc/BackupDesk/TrainingData_TSDF_0220/'
+
+sub_folder_names = ['train','gt','gt_df']
 
 # for training
 if 0:
@@ -33,11 +36,13 @@ if 0:
     output_folder = baseFolder + 'SceneNetRGBD_3_level_train'
 if 1:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
+    baseFolder = '/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/'
     input_folders = [
-        baseFolder + '047/' + 'SceneNet_train/',
+        [baseFolder + '047_200/' + 'train/'],
+        [baseFolder + '100_200/' + 'train/'],
+        [baseFolder + '200_200/' + 'train/'],
         ]
-    output_folder = baseFolder + 'SceneNetRGBD_1_level_train'
+    output_folder = baseFolder + 'ScanNet_3_level_train'
 
 #for testing
 if 0:
@@ -49,11 +54,11 @@ if 0:
         baseFolder + '188/' + 'SceneNet_test/',
         ]
     output_folder = baseFolder + 'SceneNetRGBD_3_level_test'
-if 1:
+if 0:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
+    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF/'
     input_folders = [
-        baseFolder + '047/' + 'SceneNet_test/',
+        [baseFolder + '047/' + 'SceneNet_test/', baseFolder + '047_50/' + 'SceneNet_test/'],
         ]
     output_folder = baseFolder + 'SceneNetRGBD_1_level_test'
 
@@ -80,7 +85,7 @@ if 0:# for evaluation (whole scene)
 
 
 
-# debug=True
+#debug=True
 
 
 def createFolder(directory):
@@ -121,8 +126,8 @@ def get_dict(sdf,gt,gt_df, level):
     if for_eval:
         serialization[key_input + "/dim"] = util.int64_feature(sdf.shape)
         
-        if debug:
-            print('\nshape: ', sdf.shape, '\n')
+      #  if debug:
+      #      print('\nshape: ', sdf.shape, '\n')
     
     return serialization
 def Feature(sdf, gt, gt_df, hierarchy_level=1):
@@ -131,12 +136,11 @@ def Feature(sdf, gt, gt_df, hierarchy_level=1):
     
     
 def LoadSequencePairToTFRecord(input_file_name, record_file):
-    datasets = [Dataset(os.path.join(base_folder, 'train', input_file_name),
-                        os.path.join(base_folder, 'gt', input_file_name),
-                        os.path.join(base_folder, 'gt_df', input_file_name)) for base_folder in input_folders]
+    datasets = [Dataset(base_folder, input_file_name) for base_folder in input_folders]
     # dataset = Dataset(sdf_path,gt_path,mask_path)
     with tf.io.TFRecordWriter(record_file) as writer:
         for i in tqdm(range(len(datasets[0]))): 
+            #print(i)
             serialization = dict()
             for level in range(len(datasets)):
                 sdf, gt, gt_df = datasets[level].__getitem__(i)
@@ -145,46 +149,59 @@ def LoadSequencePairToTFRecord(input_file_name, record_file):
                 gt = np.uint8(gt)
                 gt_df = gt_df.astype(float)
                 sdf = sdf * TRUNCATION # from [-1,1] to voxel distance
-                #gt_df = gt_df * TRUNCATION # originally it is 0 to 3. No needs to multiply again
                 serialized = get_dict(sdf,gt, gt_df, level)
                 for key, value in serialized.items():
                     serialization[key] = value
             
             feature = tf.train.Example(features=tf.train.Features(feature=serialization))
             writer.write(feature.SerializeToString())
-            if debug and i >= 1:
-                break
+
+            #if debug and i >= 1:
+            #    break
             
 if __name__ == '__main__':
-    input_folder_names = sorted(os.listdir(os.path.join(input_folders[0], 'train')))
+    input_folder_names = sorted(os.listdir(os.path.join(input_folders[0][0], 'train')))
     createFolder(output_folder)
     pool = mp.Pool(threads)
     pool.daemon = True
     results=[]
    
     import re
+    counter=0
     for input_file_name in input_folder_names:
+        counter+=1
         number = re.findall('\d+',input_file_name)
+        
         if len(number)  == 0:
             output_file_name = 'eval.tfrecords'
         else:
-            output_file_name = 'train_{}.tfrecords'.format(number[0])
+            nums=number[0]
+            if(len(number))>1:
+                for i in range(len(number)):
+                    if i == 0: 
+                        continue
+                    nums=nums+"_"+number[i]
+            output_file_name = 'train_{}.tfrecords'.format(nums)
         
         output_path = os.path.join(output_folder, output_file_name)
-        print(input_file_name)
-        print(output_path)
-        print('')
-      
+        print('input name', input_file_name)
+        print('output_name',output_path)
+
+        extend_name = [n+'/'+input_file_name+'/' for n in sub_folder_names]
         if debug:
-            LoadSequencePairToTFRecord(input_file_name, output_path)
+            LoadSequencePairToTFRecord(extend_name, output_path)
             break
         else:
             results.append(
                 pool.apply_async(LoadSequencePairToTFRecord, 
-                                  (input_file_name,output_path))
+                                  (extend_name,output_path))
                 )
-    pool.close()
-    pool.join()
-    results = [r.get() for r in results]
-    for r in results:
+        if up_limit>0:
+            if counter >= up_limit:
+                break;
+    if not debug:
+        pool.close()
+        pool.join()
+        results = [r.get() for r in results]
+        for r in results:
           print(r)
