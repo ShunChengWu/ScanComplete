@@ -18,7 +18,7 @@ threads = 4
 debug=False
 TRUNCATION = 3
 p_norm = 1
-up_limit=50
+up_limit=0
 
 #baseFolder='/media/sc/BackupDesk/TrainingData_TSDF_0220/'
 
@@ -27,61 +27,35 @@ sub_folder_names = ['train','gt','gt_df']
 # for training
 if 0:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF'
+    baseFolder = '/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/'
     input_folders = [
-        baseFolder + '047/' + 'SceneNet_train/',
-        baseFolder + '094/' + 'SceneNet_train/',
-        baseFolder + '188/' + 'SceneNet_train/',
+        [baseFolder + '050_200/' + 'train/'],
+        [baseFolder + '100_200/' + 'train/'],
+        [baseFolder + '200_200/' + 'train/'],
         ]
-    output_folder = baseFolder + 'SceneNetRGBD_3_level_train'
+    output_folder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/' + 'ScanNet_3_level_train'
+# for testing
 if 1:
     for_eval = True
     baseFolder = '/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/'
     input_folders = [
-        [baseFolder + '047_200/' + 'train/'],
-        [baseFolder + '100_200/' + 'train/'],
-        [baseFolder + '200_200/' + 'train/'],
+        [baseFolder + '050_200/' + 'test/'],
+        [baseFolder + '100_200/' + 'test/'],
+        [baseFolder + '200_200/' + 'test/'],
         ]
-    output_folder = baseFolder + 'ScanNet_3_level_train'
+    output_folder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/' + 'ScanNet_3_level_test'
 
-#for testing
+
+# for evaluation (whole scene)
 if 0:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_TSDF_0311/'
+    baseFolder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_whole_s200/'
     input_folders = [
-        baseFolder + '047/' + 'SceneNet_test/',
-        baseFolder + '094/' + 'SceneNet_test/',
-        baseFolder + '188/' + 'SceneNet_test/',
+        [baseFolder + '050/' + 'test/'],
+        [baseFolder + '100/' + 'test/'],
+        [baseFolder + '200/' + 'test/'],
         ]
-    output_folder = baseFolder + 'SceneNetRGBD_3_level_test'
-if 0:
-    for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingData_0421_TSDF/'
-    input_folders = [
-        [baseFolder + '047/' + 'SceneNet_test/', baseFolder + '047_50/' + 'SceneNet_test/'],
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_1_level_test'
-
-if 0:# for evaluation
-    for_eval = True
-    input_folders = [
-        baseFolder + 'SceneNet_test_047',
-        baseFolder + 'SceneNet_test_094',
-        baseFolder + 'SceneNet_test_188',
-        ]
-    output_folder = baseFolder + 'test_SceneNetRGBD_3_level_0220'
-
-
-
-if 0:# for evaluation (whole scene)
-    for_eval = True
-    baseFolder = '/media/sc/SSD1TB/Evaluation_ScanComplete/'
-    input_folders = [
-        baseFolder + '047',
-        baseFolder + '094',
-        baseFolder + '188',
-        ]
-    output_folder = baseFolder + 'SceneNetRGBD_3_level'
+    output_folder = baseFolder + 'ScanNet_3_level_test'
 
 
 
@@ -198,6 +172,7 @@ if __name__ == '__main__':
                 )
         if up_limit>0:
             if counter >= up_limit:
+                print('Reach up limit',up_limit, '. Break')
                 break;
     if not debug:
         pool.close()

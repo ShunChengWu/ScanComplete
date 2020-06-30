@@ -9,16 +9,9 @@ BATCH_SIZE=2
 # Fill in training data filepattern here.
 PATTEN='train_*.tfrecords'
 
-#BASE_DIR='../train_0220'
-#INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
-#DATA='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220/train_*.tfrecords'
-#DATA_PRED_3='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_3/train_*.tfrecords'
-#DATA_PRED_2='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_2/train_*.tfrecords'
-
-
-NUMBER_OF_STEPS=200000
-BASE_DIR='../train_0625_sample'
-INPUT_DIR='/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/ScanNet_3_level_train'
+NUMBER_OF_STEPS=300000
+BASE_DIR='../train_0628'
+INPUT_DIR='/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/ScanNet_3_level_train'
 DATA=$INPUT_DIR'/'$PATTEN
 DATA_PRED_3=$INPUT_DIR'_pred_3/'$PATTEN
 DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
@@ -84,7 +77,7 @@ python train.py \
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 1
 fi
 
-if true;then
+if false;then
 ## hi level
 DATA=$DATA_PRED_2
 IS_BASE_LEVEL=0

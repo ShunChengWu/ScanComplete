@@ -516,8 +516,14 @@ if __name__ == '__main__':
 
     # Create Files
     classes = "{:>5.5}\t".format('Metrics')
-    for name in metrics_ssc.NYU14_name_list:
-        classes += '{:>5.5}\t'.format(name)
+    if FLAGS.class_num == 14:
+        for name in metrics_ssc.NYU14_name_list:
+            classes += '{:>5.5}\t'.format(name)
+    elif FLAGS.class_num == 12:
+        for name in metrics_ssc.Label11_name_list:
+            classes += '{:>5.5}\t'.format(name)
+    else:
+        raise RuntimeError('unsupport class number.')
     classes += '{:>5.5}'.format('Mean')    
     if FLAGS.write_output:
         with open(pth_iou, 'w+') as f:

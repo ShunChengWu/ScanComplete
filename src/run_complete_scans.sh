@@ -33,10 +33,10 @@ OUTPUT_FOLDER_1=${BASE_OUTPUT_DIR}/vis_level1
 --is_base_level=1 \
 --predict_semantics=1 \
 --output_folder=/home/sc/research/ScanComplete/vis/vis_level3 \
---input_scene="/home/sc/research/ScanComplete/train_SceneNetRGBD_188/train_0.tfrecords
+--input_scene="/home/sc/research/ScanComplete/train_SceneNetRGBD_188/train_0.tfrecords"
 
 
-# Run hierarchy.
+# Run hierarchy
 
 # ------- hierarchy level 1 ------- #
 

@@ -5,6 +5,8 @@ NYU14_name_list = ['Unknown', 'Bed', 'Books', 'Ceiling', 'Chair',
                   'Floor', 'Furniture', 'Objects', 'Picture',
                   'Sofa', 'Table', 'TV', 'Wall', 'Window'
                  ]
+Label11_name_list = ["None", "Ceiling", "Floor", "Wall", "Window",
+                     "Chair", "Bed", "Sofa", "Desk","TV","Furniture","Objects"]
 
 def formatString(means,name):
     def numpy_to_string(x):
