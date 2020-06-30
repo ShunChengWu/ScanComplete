@@ -9,13 +9,6 @@ BATCH_SIZE=2
 # Fill in training data filepattern here.
 PATTEN='train_*.tfrecords'
 
-#BASE_DIR='../train_0220'
-#INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220'
-#DATA='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220/train_*.tfrecords'
-#DATA_PRED_3='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_3/train_*.tfrecords'
-#DATA_PRED_2='/media/sc/BackupDesk/TrainingData_TSDF_0220/train_SceneNetRGBD_3_level_0220_pred_2/train_*.tfrecords'
-
-
 NUMBER_OF_STEPS=200000
 BASE_DIR='../train_0625_sample'
 INPUT_DIR='/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/ScanNet_3_level_train'
@@ -27,7 +20,7 @@ DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
 
 
 # coarse level
-if true; then 
+if false; then 
 IS_BASE_LEVEL=1
 HIERARCHY_LEVEL=3
 STORED_BLOCK_DIM=16
@@ -54,7 +47,7 @@ echo "Generate training data for the next level."
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 4
 fi
 
-if true;then
+if false;then
 # mid level
 DATA=$DATA_PRED_3
 IS_BASE_LEVEL=0

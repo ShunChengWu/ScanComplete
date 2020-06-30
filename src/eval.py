@@ -367,8 +367,14 @@ def kernel(counter, feature_map,feature_map_pred, dims_pre, ious,accs,recalls,wr
         recalls += recall
        
         classes = "{:>5.5}\t".format('Metrics')
-        for name in metrics_ssc.NYU14_name_list:
-            classes += '{:>5.5}\t'.format(name)
+        if FLAGS.class_num == 14:
+            for name in metrics_ssc.NYU14_name_list:
+                classes += '{:>5.5}\t'.format(name)
+        elif FLAGS.class_num == 12:
+            for name in metrics_ssc.Label11_name_list:
+                classes += '{:>5.5}\t'.format(name)
+        else:
+            raise RuntimeError('Unsupported class num')
         classes += '{:>5.5}'.format('Mean')
         print('')
         print(classes)
@@ -515,6 +521,7 @@ if __name__ == '__main__':
         
 
     # Create Files
+    print('class_num:',FLAGS.class_num);
     classes = "{:>5.5}\t".format('Metrics')
     if FLAGS.class_num == 14:
         for name in metrics_ssc.NYU14_name_list:

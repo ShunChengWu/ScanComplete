@@ -77,7 +77,7 @@ python train.py \
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 1
 fi
 
-if false;then
+if true;then
 ## hi level
 DATA=$DATA_PRED_2
 IS_BASE_LEVEL=0

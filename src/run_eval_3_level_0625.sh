@@ -4,14 +4,9 @@ trap "kill 0" EXIT
 
 exe='/home/sc/research/ScanComplete/src/eval.py'
 
-# Test set
-#INPUT_DIR='/media/sc/BackupDesk/TrainingData_TSDF_0220/test_SceneNetRGBD_3_level_0220'
-
-### whole scene ###
-#INPUT_DIR='/media/sc/SSD1TB/Evaluation_ScanComplete/SceneNetRGBD_3_level'
-
 #Test Test
-INPUT_DIR='/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/ScanNet_3_level_test_simple'
+INPUT_DIR='/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/ScanNet_3_level_test_simple' #test set
+INPUT_DIR='/media/sc/SSD1TB/ReconstructionFromGT_TSDF_whole_s200/ScanNet_3_level_test' #whole scene
 MODEL_BASE='../train_0625_sample'
 MODEL_PATH_3=$MODEL_BASE'/train_v003'
 MODEL_PATH_2=$MODEL_BASE'/train_v002'

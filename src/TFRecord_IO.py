@@ -35,7 +35,7 @@ if 0:
         ]
     output_folder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/' + 'ScanNet_3_level_train'
 # for testing
-if 1:
+if 0:
     for_eval = True
     baseFolder = '/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/'
     input_folders = [
@@ -47,7 +47,7 @@ if 1:
 
 
 # for evaluation (whole scene)
-if 0:
+if 1:
     for_eval = True
     baseFolder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_whole_s200/'
     input_folders = [
