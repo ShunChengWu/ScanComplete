@@ -23,9 +23,8 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('input_dir', '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level_train/train_0.tfrecords',
                     'Directory to input TFRecords.')
-flags.DEFINE_string('output_eva', '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level_train/','')
+flags.DEFINE_string('output_dir', '/home/sc/research/scslam/cmake-build-debug/App/TrainingDataGenerator/tmp/SceneNetRGBD_3_level_train/','')
 flags.DEFINE_integer('height_input', 64, 'Input block y dim.')
-flags.DEFINE_integer('class_num', 14, '')
 flags.DEFINE_integer('hierarchy_level', 1, 'Hierachy level (1: finest level).')
 flags.DEFINE_integer('num_quant_levels', 256, 'Number of quantization bins.')
 flags.DEFINE_bool('is_base_level', True, 'If base level of hierarchy.')
@@ -320,17 +319,16 @@ def kernel(counter, feature_map):
 
     if FLAGS.hierarchy_level > len(_RESOLUTIONS):
         raise RuntimeError("out of range")
-    
-    # predict 
+
     ## load data at previous level
     (input_scan, target_scan, target_semantics, prediction_scan_low_resolution,
       prediction_semantics_low_resolution) = read_inputs(
       FLAGS.hierarchy_level-1, feature_map, None, FLAGS.height_input, FLAGS.pad_test,
       FLAGS.num_quant_levels, FLAGS.p_norm, FLAGS.predict_semantics, processing=0)
     if FLAGS.save_npy > 0:        
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_in.npy') 
+        outprefix = os.path.join(FLAGS.output_dir, str(counter-1) + '_in.npy') 
         np.save(outprefix, input_scan)
-        outprefix = os.path.join(FLAGS.output_eva, str(counter-1) + '_gt.npy') 
+        outprefix = os.path.join(FLAGS.output_dir, str(counter-1) + '_gt.npy') 
         np.save(outprefix, target_semantics)
          
 def process(path):
@@ -357,6 +355,6 @@ def process(path):
 if __name__ == '__main__':
     in_path = FLAGS.input_dir
     print('input:', in_path)
-    util.createFolder(FLAGS.output_eva)
+    util.createFolder(FLAGS.output_dir)
     
     process(in_path)

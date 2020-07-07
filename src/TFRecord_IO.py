@@ -25,15 +25,15 @@ up_limit=0
 sub_folder_names = ['train','gt','gt_df']
 
 # for training
-if 0:
+if 1:
     for_eval = True
-    baseFolder = '/media/sc/BackupDesk/TrainingDataScanNet_0614_TSDF/'
+    baseFolder = '/media/sc/SSD1TB/TrainingDataScanNet_surface_0614_TSDF_s200/'
     input_folders = [
-        [baseFolder + '050_200/' + 'train/'],
-        [baseFolder + '100_200/' + 'train/'],
-        [baseFolder + '200_200/' + 'train/'],
+        [baseFolder + '050/' + 'train/'],
+        [baseFolder + '100/' + 'train/'],
+        [baseFolder + '200/' + 'train/'],
         ]
-    output_folder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/' + 'ScanNet_3_level_train'
+    output_folder = baseFolder + 'ScanNet_3_level_train'
 # for testing
 if 0:
     for_eval = True
@@ -47,9 +47,9 @@ if 0:
 
 
 # for evaluation (whole scene)
-if 1:
+if 0:
     for_eval = True
-    baseFolder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_whole_s200/'
+    baseFolder = '/media/sc/SSD1TB/ReconstructionFromGT_TSDF_whole_surface_s200/'
     input_folders = [
         [baseFolder + '050/' + 'test/'],
         [baseFolder + '100/' + 'test/'],

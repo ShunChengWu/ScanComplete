@@ -10,8 +10,8 @@ BATCH_SIZE=2
 PATTEN='train_*.tfrecords'
 
 NUMBER_OF_STEPS=300000
-BASE_DIR='../train_0628'
-INPUT_DIR='/media/sc/SSD1TB/ReconstructionFromGT_TSDF_s200/ScanNet_3_level_train'
+BASE_DIR='../train_0704'
+INPUT_DIR='/media/sc/SSD1TB/TrainingDataScanNet_surface_0614_TSDF_s200/ScanNet_3_level_train'
 DATA=$INPUT_DIR'/'$PATTEN
 DATA_PRED_3=$INPUT_DIR'_pred_3/'$PATTEN
 DATA_PRED_2=$INPUT_DIR'_pred_2/'$PATTEN
@@ -47,7 +47,7 @@ echo "Generate training data for the next level."
 . ./run_train_data_gen_3_level.sh $INPUT_DIR ${BASE_DIR}/train_v${VERSION} $HIERARCHY_LEVEL $IS_BASE_LEVEL 4
 fi
 
-if false;then
+if true;then
 # mid level
 DATA=$DATA_PRED_3
 IS_BASE_LEVEL=0
